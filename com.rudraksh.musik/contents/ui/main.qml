@@ -959,6 +959,7 @@ PlasmoidItem {
             visible: false
             width: parent.width
             height: parent.height
+            source: player.artUrl || Qt.resolvedUrl("assets/default_album_art.svg")
 
             onStatusChanged: {
                 if (status === Image.Ready) {
@@ -1126,32 +1127,12 @@ PlasmoidItem {
                     cached: true
                 }
 
-                Image {
+                AlbumArt {
                     id: albumArt
                     anchors.fill: parent
                     source: player.artUrl || Qt.resolvedUrl("assets/default_album_art.svg")
-                    fillMode: Image.PreserveAspectFit
-
-                    // onSourceChanged: {
-                    //     // Extract dominant color when image source changes
-                    //     widget.extractDominantColor(source);
-                    // }
-
-                    onSourceChanged: {
-                        if (source) {
-                            hiddenImage.source = source;
-                        }
-                    }
-
-                    // Add layer to enable clipping with rounded corners
-                    layer.enabled: true
-                    layer.effect: OpacityMask {
-                        maskSource: Rectangle {
-                            width: albumArt.width
-                            height: albumArt.height
-                            radius: imageContainer.radius
-                        }
-                    }
+                    fallback: Qt.resolvedUrl("assets/default_album_art.svg")
+                    radius: imageContainer.radius
                 }
             }
 
