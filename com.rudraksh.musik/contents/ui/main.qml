@@ -223,7 +223,12 @@ PlasmoidItem {
             anchors.topMargin: -widget.height * 0.12
             anchors.bottomMargin: -widget.height * 0.12
 
-            opacity: mouseArea.containsMouse || widget.expanded ? 1.0 : 0
+            // Buttons have their own hover-enabled MouseAreas, which steal the
+            // hover event from the compact mouseArea above. Fold their hover
+            // state back in so the big background stays lit when the cursor
+            // enters directly onto a control.
+            opacity: mouseArea.containsMouse || widget.expanded
+                     || btnPrev.hovered || btnPlay.hovered || btnNext.hovered ? 1.0 : 0
 
             Behavior on opacity {
                 NumberAnimation {
@@ -380,30 +385,36 @@ PlasmoidItem {
                 Layout.maximumWidth: controlsSize * 3
                 spacing: 0 // Space between the buttons
 
-                PlasmaComponents3.ToolButton {
+                MiniPlayerButton {
+                    id: btnPrev
                     visible: plasmoid.configuration.commandsInPanel
-                    enabled: player.canGoPrevious
-                    icon.name: iconSources.compactPrev
-                    implicitWidth: compact.controlsSize
-                    implicitHeight: compact.controlsSize
+                    active: player.canGoPrevious
+                    size: compact.controlsSize
+                    iconSource: iconSources.compactPrev
+                    hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
+                                       || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
                     onClicked: player.previous()
                 }
 
-                PlasmaComponents3.ToolButton {
+                MiniPlayerButton {
+                    id: btnPlay
                     visible: plasmoid.configuration.commandsInPanel
-                    enabled: player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay
-                    implicitWidth: compact.controlsSize
-                    implicitHeight: compact.controlsSize
-                    icon.name: player.playbackStatus === Mpris.PlaybackStatus.Playing ? iconSources.compactPause : iconSources.compactPlay
+                    active: player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay
+                    size: compact.controlsSize
+                    iconSource: player.playbackStatus === Mpris.PlaybackStatus.Playing ? iconSources.compactPause : iconSources.compactPlay
+                    hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
+                                       || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
                     onClicked: player.playPause()
                 }
 
-                PlasmaComponents3.ToolButton {
+                MiniPlayerButton {
+                    id: btnNext
                     visible: plasmoid.configuration.commandsInPanel
-                    enabled: player.canGoNext
-                    implicitWidth: compact.controlsSize
-                    implicitHeight: compact.controlsSize
-                    icon.name: iconSources.compactNext
+                    active: player.canGoNext
+                    size: compact.controlsSize
+                    iconSource: iconSources.compactNext
+                    hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
+                                       || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
                     onClicked: player.next()
                 }
             }

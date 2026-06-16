@@ -4,9 +4,9 @@
         color:#dadada;
       }</style>
  </defs>
- <g transform="matrix(.07098 0 0 .07098 -1.0857 -1.0857)" fill="#fff" fill-opacity=".8" font-family="none" font-size="none" font-weight="none" stroke-miterlimit="10" text-anchor="none" style="mix-blend-mode:normal">
-  <g transform="scale(10.667)" fill="#fff" fill-opacity=".8">
-   <path d="m6 5v14h4v-14zm8 0v14h4v-14z" fill="#fff" fill-opacity=".75"/>
+ <g transform="matrix(.07098 0 0 .07098 -1.0857 -1.0857)" fill="#fff" font-family="none" font-size="none" font-weight="none" stroke-miterlimit="10" text-anchor="none" style="mix-blend-mode:normal">
+  <g transform="scale(10.667)" fill="#fff">
+   <path d="m6 5v14h4v-14zm8 0v14h4v-14z" fill="#fff" />
   </g>
  </g>
 </svg>
