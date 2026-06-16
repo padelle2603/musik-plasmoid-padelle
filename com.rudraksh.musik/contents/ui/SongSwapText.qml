@@ -23,13 +23,20 @@ Item {
     property int dir: 0
     property real glideDistance: 32
 
+    // Width of the text block. When >= 0 the wrapper is this wide (so it can be
+    // centered under the album art) and the text is aligned within it; when < 0
+    // the wrapper just hugs the text.
+    property real blockWidth: -1
+    // Horizontal placement of the text inside the block.
+    property bool centerContent: true
+
     // Skip the animation for the very first value so the widget doesn't
     // flourish on initial open.
     property bool _primed: false
 
     default property alias content: holder.data
 
-    implicitWidth: holder.childrenRect.width
+    implicitWidth: blockWidth >= 0 ? blockWidth : holder.childrenRect.width
     implicitHeight: holder.childrenRect.height
     Layout.preferredWidth: implicitWidth
     Layout.preferredHeight: implicitHeight
@@ -42,7 +49,10 @@ Item {
 
     Item {
         id: holder
-        anchors.fill: parent
+        width: childrenRect.width
+        height: childrenRect.height
+        x: wrap.centerContent ? (wrap.width - width) / 2 : 0
+        y: (wrap.height - height) / 2
         opacity: wrap.animOpacity
         transform: Translate { x: wrap.animX }
 

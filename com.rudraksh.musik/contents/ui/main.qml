@@ -1156,12 +1156,16 @@ PlasmoidItem {
             }
 
             SongSwapText {
-                Layout.alignment: (plasmoid.configuration.centerPlayerText ? Qt.AlignHCenter : Qt.AlignLeft) | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignHCenter
                 // Add margin before song name
                 Layout.topMargin: plasmoid.configuration.beforeSongName
                 // Add margin after song name
                 Layout.bottomMargin: plasmoid.configuration.afterSongName
 
+                // Block matches the album-art width and stays centered; the
+                // text is aligned left/center within it (see ScrollingText).
+                blockWidth: imageContainer.width
+                centerContent: plasmoid.configuration.centerPlayerText
                 dir: widget.textSwapDir
                 trigger: player.title
 
@@ -1187,10 +1191,12 @@ PlasmoidItem {
             }
 
             SongSwapText {
-                Layout.alignment: (plasmoid.configuration.centerPlayerText ? Qt.AlignHCenter : Qt.AlignLeft) | Qt.AlignVCenter
+                Layout.alignment: Qt.AlignHCenter
                 // Add margin after artist name
                 Layout.bottomMargin: plasmoid.configuration.afterArtistName
 
+                blockWidth: imageContainer.width
+                centerContent: plasmoid.configuration.centerPlayerText
                 dir: widget.textSwapDir
                 trigger: player.artists
 
