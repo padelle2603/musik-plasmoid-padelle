@@ -162,8 +162,11 @@ Item {
     // Monitor isPlaying changes
     onIsPlayingChanged: {
         if (!isPlaying) {
+            // Keep the render loop + socket alive so the bars can ride the
+            // decaying audio tail down (see updateBars). stopAnimation is only
+            // a safety cap that force-ends the stop if the bars never settle.
             isStopping = true
-            stopAnimation.start()
+            stopAnimation.restart()
         } else {
             time = 0
             stopAnimation.stop()
@@ -285,7 +288,7 @@ Item {
 
     function updateBars() {
         // Stale guard: backend connected but audio routed elsewhere / stream gap
-        var fresh = liveData && (Date.now() - lastDataTime) < 500
+        var fresh = liveData && (Date.now() - lastDataTime) < 350
 
         for (var i = 0; i < barCount; i++) {
             if (isPlaying && fresh) {
@@ -297,15 +300,27 @@ Item {
                 var wave3 = (Math.sin(time * 1.2 + phase * 3) + 1) / 2
 
                 targetHeights[i] = minHeight + (wave * 0.3 + wave2 * 0.2 + wave3 * 0.15) * intensity
-            } else if (isStopping) {
-                // When stopping, gradually lower the bars based on stopProgress
-                targetHeights[i] = barHeights[i] * (1 - stopProgress)
+            } else if (isStopping && fresh) {
+                // Ride the natural audio tail down: keep reacting to the live
+                // data (which fades to zero on its own) with no min-height
+                // floor, so the bars keep dancing as they sink instead of
+                // freezing into a static shape and scaling away.
+                targetHeights[i] = liveHeights[i] * 1.3 * intensity
             } else {
-                targetHeights[i] = minHeight
+                // Stopped with no live data (or fully settled): fall to 0
+                targetHeights[i] = 0
             }
 
             // Apply smoothing to the height transitions
             barHeights[i] = barHeights[i] * smoothing + targetHeights[i] * (1 - smoothing)
+        }
+
+        // Once the bars have effectively reached the bottom, end the stop so
+        // the render loop can idle (instead of waiting out the safety cap).
+        if (isStopping && !isPlaying) {
+            var mx = 0
+            for (var k = 0; k < barCount; k++) if (barHeights[k] > mx) mx = barHeights[k]
+            if (mx < 0.006) isStopping = false
         }
     }
 
