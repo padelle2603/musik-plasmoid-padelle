@@ -398,7 +398,7 @@ PlasmoidItem {
                     hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
                                        || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
                     onClicked: {
-                        widget.textSwapDir = 1  // glide left
+                        widget.textSwapDir = -1  // glide right
                         player.previous()
                     }
                 }
@@ -423,7 +423,7 @@ PlasmoidItem {
                     hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
                                        || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
                     onClicked: {
-                        widget.textSwapDir = -1  // glide right
+                        widget.textSwapDir = 1  // glide left
                         player.next()
                     }
                 }
@@ -1348,7 +1348,7 @@ PlasmoidItem {
                             // source: "player_prev"
                             source: iconSources.prev
                             onClicked: {
-                                widget.textSwapDir = 1  // glide left
+                                widget.textSwapDir = -1  // glide right
                                 player.previous()
                                 // Call forceUpdateScroll() from the ScrollingText.qml
                                 titleText.forceUpdateScroll()
@@ -1376,7 +1376,7 @@ PlasmoidItem {
                             // source: "player_next"
                             source: iconSources.next
                             onClicked: {
-                                widget.textSwapDir = -1  // glide right
+                                widget.textSwapDir = 1  // glide left
                                 player.next()
                                 // Call forceUpdateScroll() from the ScrollingText.qml
                                 titleText.forceUpdateScroll()
