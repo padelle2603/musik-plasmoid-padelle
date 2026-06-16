@@ -1156,7 +1156,7 @@ PlasmoidItem {
             }
 
             SongSwapText {
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: (plasmoid.configuration.centerPlayerText ? Qt.AlignHCenter : Qt.AlignLeft) | Qt.AlignVCenter
                 // Add margin before song name
                 Layout.topMargin: plasmoid.configuration.beforeSongName
                 // Add margin after song name
@@ -1187,7 +1187,7 @@ PlasmoidItem {
             }
 
             SongSwapText {
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: (plasmoid.configuration.centerPlayerText ? Qt.AlignHCenter : Qt.AlignLeft) | Qt.AlignVCenter
                 // Add margin after artist name
                 Layout.bottomMargin: plasmoid.configuration.afterArtistName
 

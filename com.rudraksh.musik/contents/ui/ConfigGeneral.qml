@@ -71,6 +71,7 @@ KCM.SimpleKCM {
     property alias cfg_playerControlsSpacing: playerControlsSpacing.value
     property alias cfg_controlsRowSpacing: controlsRowSpacing.value
     property alias cfg_showHoverBackground: showHoverBackground.checked
+    property alias cfg_centerPlayerText: centerPlayerText.checked
 
 
     // Audio visualization
@@ -158,6 +159,12 @@ KCM.SimpleKCM {
         CheckBox {
             id: showHoverBackground
             text: i18n("Show hover background")
+        }
+
+        CheckBox {
+            id: centerPlayerText
+            Kirigami.FormData.label: i18n("Text alignment:")
+            text: i18n("Center align song & artist text")
         }
 
         Kirigami.Separator {
