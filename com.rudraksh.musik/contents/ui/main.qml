@@ -38,6 +38,10 @@ PlasmoidItem {
     property color defaultActiveColor: "white"
     property color defaultForegroundColor: Qt.rgba(1, 1, 1, 0.65)
 
+    // Direction for the full-player song-change text reveal:
+    // +1 previous (glide left), -1 next (glide right), 0 neutral blur+fade.
+    property int textSwapDir: 0
+
     readonly property font textFont: {
         return plasmoid.configuration.useCustomFont ? plasmoid.configuration.customFont : Kirigami.Theme.defaultFont
     }
@@ -393,7 +397,10 @@ PlasmoidItem {
                     iconSource: iconSources.compactPrev
                     hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
                                        || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
-                    onClicked: player.previous()
+                    onClicked: {
+                        widget.textSwapDir = 1  // glide left
+                        player.previous()
+                    }
                 }
 
                 MiniPlayerButton {
@@ -415,7 +422,10 @@ PlasmoidItem {
                     iconSource: iconSources.compactNext
                     hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
                                        || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
-                    onClicked: player.next()
+                    onClicked: {
+                        widget.textSwapDir = -1  // glide right
+                        player.next()
+                    }
                 }
             }
         }
@@ -1145,59 +1155,71 @@ PlasmoidItem {
                 }
             }
 
-            ScrollingText {
+            SongSwapText {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: Math.min(imageContainer.width, maxWidth)
-                // horizontalAlignment: Text.AlignHCenter
-
-                speed: plasmoid.configuration.textScrollingSpeed
-                font: widget.fullPlayerSongNameFont
-                maxWidth: imageContainer.width
-                text: player.title
-
-                /*
-                * If accented song name is enabled
-                *   if custom color is enabled, use the custom color
-                *   else use the dominant color
-                * else use the default color
-                */
-                textColor: plasmoid.configuration.accentedSongName ? (plasmoid.configuration.useCustomColor ? plasmoid.configuration.accentColor : widget.dominantColor) : '#A8FFFFFF'
-                fullRepresentation: true
-
                 // Add margin before song name
                 Layout.topMargin: plasmoid.configuration.beforeSongName
                 // Add margin after song name
                 Layout.bottomMargin: plasmoid.configuration.afterSongName
+
+                dir: widget.textSwapDir
+                trigger: player.title
+
+                ScrollingText {
+                    id: titleText
+                    Layout.preferredWidth: Math.min(imageContainer.width, maxWidth)
+                    // horizontalAlignment: Text.AlignHCenter
+
+                    speed: plasmoid.configuration.textScrollingSpeed
+                    font: widget.fullPlayerSongNameFont
+                    maxWidth: imageContainer.width
+                    text: player.title
+
+                    /*
+                    * If accented song name is enabled
+                    *   if custom color is enabled, use the custom color
+                    *   else use the dominant color
+                    * else use the default color
+                    */
+                    textColor: plasmoid.configuration.accentedSongName ? (plasmoid.configuration.useCustomColor ? plasmoid.configuration.accentColor : widget.dominantColor) : '#A8FFFFFF'
+                    fullRepresentation: true
+                }
             }
 
-            ScrollingText {
+            SongSwapText {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: Math.min(imageContainer.width, maxWidth)
-
-                speed: plasmoid.configuration.textScrollingSpeed
-                font: widget.fullPlayerArtistNameFont
-                maxWidth: imageContainer.width
-                text: player.artists
-                opacity: 0.88
-
-                /*
-                * If accented artist name is enabled
-                *   if custom color is enabled, use the custom color
-                *   else use the dominant color
-                * else use the default color
-                */
-                textColor: plasmoid.configuration.accentedArtistName ? (plasmoid.configuration.useCustomColor ? plasmoid.configuration.accentColor : widget.dominantColor) : '#A8FFFFFF'
-                fullRepresentation: true
-
-                Connections {
-                    target: widget
-                    function onDominantColorChanged() {
-                        console.log("Dominant color updated in ScrollingText:", widget.dominantColor);
-                    }
-                }
-
                 // Add margin after artist name
                 Layout.bottomMargin: plasmoid.configuration.afterArtistName
+
+                dir: widget.textSwapDir
+                trigger: player.artists
+
+                ScrollingText {
+                    id: artistText
+                    Layout.preferredWidth: Math.min(imageContainer.width, maxWidth)
+
+                    speed: plasmoid.configuration.textScrollingSpeed
+                    font: widget.fullPlayerArtistNameFont
+                    maxWidth: imageContainer.width
+                    text: player.artists
+                    opacity: 0.88
+
+                    /*
+                    * If accented artist name is enabled
+                    *   if custom color is enabled, use the custom color
+                    *   else use the dominant color
+                    * else use the default color
+                    */
+                    textColor: plasmoid.configuration.accentedArtistName ? (plasmoid.configuration.useCustomColor ? plasmoid.configuration.accentColor : widget.dominantColor) : '#A8FFFFFF'
+                    fullRepresentation: true
+
+                    Connections {
+                        target: widget
+                        function onDominantColorChanged() {
+                            console.log("Dominant color updated in ScrollingText:", widget.dominantColor);
+                        }
+                    }
+                }
             }
 
 
@@ -1320,6 +1342,7 @@ PlasmoidItem {
                             // source: "player_prev"
                             source: iconSources.prev
                             onClicked: {
+                                widget.textSwapDir = 1  // glide left
                                 player.previous()
                                 // Call forceUpdateScroll() from the ScrollingText.qml
                                 titleText.forceUpdateScroll()
@@ -1347,6 +1370,7 @@ PlasmoidItem {
                             // source: "player_next"
                             source: iconSources.next
                             onClicked: {
+                                widget.textSwapDir = -1  // glide right
                                 player.next()
                                 // Call forceUpdateScroll() from the ScrollingText.qml
                                 titleText.forceUpdateScroll()
