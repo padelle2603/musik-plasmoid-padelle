@@ -320,9 +320,11 @@ PlasmoidItem {
                 // Add some spacing to the left
                 Layout.leftMargin: Kirigami.Units.largeSpacing
 
-                // Glide + blur the whole title/artist stack on song change.
+                // Blur + scale + fade on song change (album-cover style) — the
+                // horizontal glide reads as too much in the mini player.
                 centerContent: false
-                dir: widget.textSwapDir
+                scaleIn: true
+                blurStrength: 12
                 trigger: player.title
 
                 ColumnLayout {
@@ -376,7 +378,8 @@ PlasmoidItem {
                 Layout.rightMargin: -5 // Some spacing to the right of the text
 
                 centerContent: false
-                dir: widget.textSwapDir
+                scaleIn: true
+                blurStrength: 12
                 trigger: player.title
 
                 ScrollingText {

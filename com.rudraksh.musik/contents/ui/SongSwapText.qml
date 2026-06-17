@@ -15,6 +15,10 @@ import QtQuick.Effects
 // `dir`:  +1 = enter from the right, glide left   (previous track)
 //         -1 = enter from the left,  glide right  (next track)
 //          0 = no glide, pure blur+fade           (external / first load)
+//
+// Set `vertical: true` for the calmer animate-text "soft-blur-in" variant:
+// a gentle upward drift + blur + fade with no directional glide (used for the
+// mini player, where the horizontal glide reads as too much).
 Item {
     id: wrap
 
@@ -22,6 +26,12 @@ Item {
     property var trigger
     property int dir: 0
     property real glideDistance: 32
+    property bool vertical: false
+    // Scale-in variant (blur + scale-up + fade, no translate) — same motion as
+    // the album-cover swap. Takes precedence over `vertical`/`dir` when set.
+    property bool scaleIn: false
+    property real scaleFrom: 0.94
+    property real blurStrength: 24
 
     // Width of the text block. When >= 0 the wrapper is this wide (so it can be
     // centered under the album art) and the text is aligned within it; when < 0
@@ -44,8 +54,10 @@ Item {
 
     // Animated state
     property real animX: 0
+    property real animY: 0
     property real animBlur: 0
     property real animOpacity: 1
+    property real animScale: 1
 
     Item {
         id: holder
@@ -54,14 +66,15 @@ Item {
         x: wrap.centerContent ? (wrap.width - width) / 2 : 0
         y: (wrap.height - height) / 2
         opacity: wrap.animOpacity
-        transform: Translate { x: wrap.animX }
+        scale: wrap.animScale
+        transform: Translate { x: wrap.animX; y: wrap.animY }
 
         // Only pay for the blur pass while a transition is running; at rest the
         // text renders crisp with no extra layer.
         layer.enabled: revealAnim.running
         layer.effect: MultiEffect {
             blurEnabled: true
-            blurMax: 24
+            blurMax: wrap.blurStrength
             blur: wrap.animBlur
         }
     }
@@ -72,7 +85,21 @@ Item {
             return
         }
         revealAnim.stop()
-        animX = wrap.dir * wrap.glideDistance
+        if (wrap.scaleIn) {
+            // blur + scale-up + fade, no translate (album-cover style)
+            animX = 0
+            animY = 0
+            animScale = wrap.scaleFrom
+        } else if (wrap.vertical) {
+            // soft-blur-in: drift up from below, no horizontal direction
+            animX = 0
+            animY = wrap.glideDistance
+            animScale = 1
+        } else {
+            animX = wrap.dir * wrap.glideDistance
+            animY = 0
+            animScale = 1
+        }
         animBlur = 1.0
         animOpacity = 0.0
         revealAnim.start()
@@ -82,6 +109,16 @@ Item {
         id: revealAnim
         NumberAnimation {
             target: wrap; property: "animX"; to: 0; duration: 760
+            easing.type: Easing.Bezier
+            easing.bezierCurve: [0.22, 1, 0.36, 1, 1, 1]
+        }
+        NumberAnimation {
+            target: wrap; property: "animY"; to: 0; duration: 760
+            easing.type: Easing.Bezier
+            easing.bezierCurve: [0.22, 1, 0.36, 1, 1, 1]
+        }
+        NumberAnimation {
+            target: wrap; property: "animScale"; to: 1; duration: 620
             easing.type: Easing.Bezier
             easing.bezierCurve: [0.22, 1, 0.36, 1, 1, 1]
         }
