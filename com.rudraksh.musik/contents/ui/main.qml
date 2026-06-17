@@ -313,18 +313,25 @@ PlasmoidItem {
             }
 
             // Separate Title and Artist
-            Item {
+            SongSwapText {
                 visible: plasmoid.configuration.separateText
-                Layout.preferredHeight: column.implicitHeight
-                Layout.preferredWidth: column.implicitWidth
+                Layout.alignment: Qt.AlignVCenter
 
                 // Add some spacing to the left
                 Layout.leftMargin: Kirigami.Units.largeSpacing
 
+                // Glide + blur the whole title/artist stack on song change.
+                centerContent: false
+                dir: widget.textSwapDir
+                trigger: player.title
+
                 ColumnLayout {
                     id: column
                     spacing: 0
-                    anchors.fill: parent
+                    // Size to content (not anchors.fill) so the SongSwapText
+                    // wrapper can measure us without a binding loop.
+                    width: implicitWidth
+                    height: implicitHeight
 
                     // Algin
                     Layout.alignment: Qt.AlignVCenter
@@ -362,20 +369,28 @@ PlasmoidItem {
                 }
             }
 
-            ScrollingText {
+            SongSwapText {
                 visible: !plasmoid.configuration.separateText
-                overflowBehaviour: plasmoid.configuration.textScrollingBehaviour
-                speed: plasmoid.configuration.textScrollingSpeed
-                maxWidth: plasmoid.configuration.maxSongWidthInPanel
-                text: [player.artists, player.title].filter((x) => x).join(" - ")
-                // font: widget.textFont
-                font: widget.miniPlayerSongNameFont
-                // Align to the left
-                Layout.alignment: Qt.AlignLeft
+                Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: 5 // Some spacing to the left of the text
                 Layout.rightMargin: -5 // Some spacing to the right of the text
-                hoveredOnPlasmoid: mouseArea.containsMouse
-                fullRepresentation: false
+
+                centerContent: false
+                dir: widget.textSwapDir
+                trigger: player.title
+
+                ScrollingText {
+                    overflowBehaviour: plasmoid.configuration.textScrollingBehaviour
+                    speed: plasmoid.configuration.textScrollingSpeed
+                    maxWidth: plasmoid.configuration.maxSongWidthInPanel
+                    text: [player.artists, player.title].filter((x) => x).join(" - ")
+                    // font: widget.textFont
+                    font: widget.miniPlayerSongNameFont
+                    // Align to the left
+                    Layout.alignment: Qt.AlignLeft
+                    hoveredOnPlasmoid: mouseArea.containsMouse
+                    fullRepresentation: false
+                }
             }
 
 
