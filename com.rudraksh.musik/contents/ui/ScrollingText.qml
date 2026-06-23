@@ -121,21 +121,24 @@ Item {
         updateScrollingState()
     }
 
-    // Fix for when the width changes
+    // Fix for when the width changes. Width changes when the text metrics
+    // settle — e.g. fonts finish loading or the album-art column gets its
+    // real size after a plasmashell restart. Always re-validate so the text
+    // isn't left parked off-screen / clipped (the old guard only handled the
+    // non-scrolling case, so a late settle while shouldScroll stayed broken
+    // until play/pause forced an update).
     onWidthChanged: {
-        if (!shouldScroll) {
-            resetTextPosition()
-        }
+        resetTextPosition()
+        updateScrollingState()
     }
 
-    // Parent visibility handler
-    Connections {
-        target: parent
-        function onVisibleChanged() {
-            if (parent && parent.visible) {
-                // Small delay before fixing position
-                shellRestartTimer.start()
-            }
+    // When the item (re)appears — e.g. the popup opens after a shell restart —
+    // re-validate position once the layout has settled. Watching our own
+    // visibility is more reliable than the parent's, since wrappers like
+    // SongSwapText reparent us.
+    onVisibleChanged: {
+        if (visible) {
+            shellRestartTimer.restart()
         }
     }
 
