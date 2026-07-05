@@ -206,6 +206,7 @@ PlasmoidItem {
         Layout.fillHeight: true
 
         readonly property real controlsSize: Math.min(height, Kirigami.Units.iconSizes.medium)
+        readonly property real miniButtonSize: Math.min(Math.max(1, widget.height - 7), Math.max(1, Kirigami.Units.iconSizes.medium - 7)) - 3
 
         MouseArea {
             // Use this area for all mouse interactions
@@ -404,15 +405,15 @@ PlasmoidItem {
                 Layout.fillWidth: true
                 Layout.leftMargin: 6 // Space to the left of the buttons
                 Layout.rightMargin: 0 // Space to the right of the buttons
-                Layout.minimumWidth: controlsSize * 3
-                Layout.maximumWidth: controlsSize * 3
+                Layout.minimumWidth: compact.miniButtonSize * 3
+                Layout.maximumWidth: compact.miniButtonSize * 3
                 spacing: 0 // Space between the buttons
 
                 MiniPlayerButton {
                     id: btnPrev
                     visible: plasmoid.configuration.commandsInPanel
                     active: player.canGoPrevious
-                    size: compact.controlsSize
+                    size: compact.miniButtonSize
                     iconSource: iconSources.compactPrev
                     hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
                                        || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
@@ -426,7 +427,7 @@ PlasmoidItem {
                     id: btnPlay
                     visible: plasmoid.configuration.commandsInPanel
                     active: player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay
-                    size: compact.controlsSize
+                    size: compact.miniButtonSize
                     iconSource: player.playbackStatus === Mpris.PlaybackStatus.Playing ? iconSources.compactPause : iconSources.compactPlay
                     hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
                                        || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
@@ -437,7 +438,7 @@ PlasmoidItem {
                     id: btnNext
                     visible: plasmoid.configuration.commandsInPanel
                     active: player.canGoNext
-                    size: compact.controlsSize
+                    size: compact.miniButtonSize
                     iconSource: iconSources.compactNext
                     hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
                                        || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
