@@ -80,15 +80,14 @@ PlasmoidItem {
         }
     }
 
-    // To handle resuming from suspend, add this:
+    // When the popup opens (e.g. after the machine resumes from sleep), make
+    // sure we're still pointed at a live player. Non-stealing: it won't pull
+    // focus away from a player that's still valid.
     Connections {
-        target: QtQuick.Window.window
-        function onVisibleChanged() {
-            if (QtQuick.Window.window.visible) {
-                console.log("Window became visible, checking for active sources");
-                player.updatingFromPlayer = true;
-                player.selectActiveSource();
-            }
+        target: widget
+        function onExpandedChanged() {
+            if (widget.expanded)
+                player.ensureValidCurrent();
         }
     }
 

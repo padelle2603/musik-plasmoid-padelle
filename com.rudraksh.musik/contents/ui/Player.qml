@@ -6,24 +6,42 @@ QtObject {
     id: root
 
     property var mpris2Model: Mpris.Mpris2Model {
-        onRowsInserted: (_, rowIndex) => {
-            selectPlayerSource(rowIndex);
+        // A new player appeared. Seed its status so its initial state isn't
+        // mistaken for a transition; then — once past the initial seed —
+        // treat a brand-new already-playing source as a deliberate start.
+        onRowsInserted: (parent, first, last) => {
+            for (let i = first; i <= last; i++) {
+                const p = root._containerAt(i);
+                if (!p) continue;
+                root._lastStatus[root._key(p)] = p.playbackStatus;
+                if (root._seeded && p.playbackStatus === Mpris.PlaybackStatus.Playing)
+                    root._switchTo(i, p);
+            }
         }
 
-        // Use rowsChanged signal instead of sourcesChanged
+        // A player vanished — make sure we still point at a valid one.
         onRowsRemoved: () => {
-            // When players are removed, also check what's still available
-            initTimer.restart();
+            root.ensureValidCurrent();
         }
 
-        // We can also check when the model data changes
+        // Any player's data changed. Only switch on a real Paused->Playing
+        // edge (the user resuming a track), so a browser tab stuck in a stale
+        // "Playing" state can't repeatedly steal the selection.
         onDataChanged: () => {
-            checkPlayingPlayers();
+            root._scanTransitions();
         }
     }
 
     property string sourceName: "any"
     property bool prioritizePlayingSource: true // New property to control priority behavior
+
+    // Edge-detection state: last seen playbackStatus per player, so we can tell
+    // a fresh "resume" (Paused -> Playing) from a player that has simply been
+    // Playing all along. Keyed by a stable per-instance id.
+    property var _lastStatus: ({})
+    // True once the initial status of every player has been recorded; before
+    // this we must not treat pre-existing Playing players as transitions.
+    property bool _seeded: false
 
     readonly property bool ready: {
         if (!mpris2Model.currentPlayer) {
@@ -39,67 +57,90 @@ QtObject {
         running: true
         repeat: false
         onTriggered: {
+            root._seedStatuses();
+            root._seeded = true;
             selectActiveSource();
         }
     }
 
-    // Timer to periodically check for playing sources (can be adjusted or disabled)
+    // Periodic safety net: only recovers when we've lost a valid current
+    // player; it never steals away from one that's still alive.
     property var checkTimer: Timer {
         interval: 5000
         running: prioritizePlayingSource
         repeat: true
         onTriggered: {
-            checkPlayingPlayers();
+            ensureValidCurrent();
         }
     }
 
-    // Check if any players have started playing
-    function checkPlayingPlayers() {
-        if (!prioritizePlayingSource) return;
-
-        // Only look for playing sources if we don't already have one
-        if (ready && mpris2Model.currentPlayer &&
-            mpris2Model.currentPlayer.playbackStatus === Mpris.PlaybackStatus.Playing) {
-            return; // Already have a playing source selected
-        }
-
-        // Otherwise scan for any playing sources
-        selectActiveSource();
+    function _containerAt(i) {
+        if (i < 0 || i >= mpris2Model.rowCount())
+            return null;
+        return mpris2Model.data(mpris2Model.index(i, 0), Qt.UserRole + 1);
     }
 
-    // Function to select a player when a new source is added
-    function selectPlayerSource(rowIndex) {
-        const CONTAINER_ROLE = Qt.UserRole + 1
-        const player = mpris2Model.data(mpris2Model.index(rowIndex, 0), CONTAINER_ROLE)
+    // Stable-ish identity for a player instance (instancePid is CONSTANT, so it
+    // survives metadata/status churn and tells two browser tabs apart well
+    // enough for edge detection).
+    function _key(p) {
+        return (p.instancePid !== undefined ? p.instancePid : "?") + "|"
+             + (p.desktopEntry || "") + "|" + (p.identity || "");
+    }
 
-        // If this is the configured source, use it
-        if (player.desktopEntry === root.sourceName) {
-            mpris2Model.currentIndex = rowIndex;
+    // Record the current status of every player without switching — primes
+    // edge detection so pre-existing Playing players aren't seen as resumes.
+    function _seedStatuses() {
+        root._lastStatus = ({});
+        for (let i = 0; i < mpris2Model.rowCount(); i++) {
+            const p = _containerAt(i);
+            if (p)
+                root._lastStatus[_key(p)] = p.playbackStatus;
+        }
+    }
+
+    // Point the active selection at row `rowIndex`.
+    function _switchTo(rowIndex, p) {
+        if (mpris2Model.currentIndex === rowIndex)
+            return;
+        console.log("Switching to (re)started source:", p.desktopEntry || p.identity);
+        mpris2Model.currentIndex = rowIndex;
+        sourceName = p.desktopEntry;
+    }
+
+    // Scan all players; switch to the first that has just transitioned into
+    // Playing. Always refreshes the recorded statuses.
+    function _scanTransitions() {
+        if (!prioritizePlayingSource) {
+            _seedStatuses();
             return;
         }
-
-        // If we're prioritizing playing sources and this one is playing
-        if (prioritizePlayingSource && player.playbackStatus === Mpris.PlaybackStatus.Playing) {
-            // Check if we should override the current selection
-            let shouldOverride = false;
-
-            // If no source is selected yet or "any" is selected
-            if (sourceName === "any") {
-                shouldOverride = true;
-            }
-            // If current player is not playing but this one is
-            else if (mpris2Model.currentPlayer &&
-                    mpris2Model.currentPlayer.playbackStatus !== Mpris.PlaybackStatus.Playing) {
-                shouldOverride = true;
-            }
-
-            if (shouldOverride) {
-                console.log("Selecting active player:", player.desktopEntry);
-                mpris2Model.currentIndex = rowIndex;
-                // Update the source name to the playing source
-                sourceName = player.desktopEntry;
+        let switched = false;
+        for (let i = 0; i < mpris2Model.rowCount(); i++) {
+            const p = _containerAt(i);
+            if (!p)
+                continue;
+            const key = _key(p);
+            const prev = root._lastStatus[key];
+            const now = p.playbackStatus;
+            root._lastStatus[key] = now;
+            if (root._seeded && !switched
+                    && now === Mpris.PlaybackStatus.Playing
+                    && prev !== Mpris.PlaybackStatus.Playing) {
+                _switchTo(i, p);
+                switched = true;
             }
         }
+    }
+
+    // Ensure we point at a usable player without stealing from a valid current
+    // one (used on removal, popup open, and the periodic safety net).
+    function ensureValidCurrent() {
+        if (!prioritizePlayingSource)
+            return;
+        if (mpris2Model.currentPlayer)
+            return;
+        selectActiveSource();
     }
 
     // Function to scan all sources and find any actively playing source
