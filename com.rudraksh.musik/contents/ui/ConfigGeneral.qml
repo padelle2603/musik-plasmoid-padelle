@@ -13,6 +13,8 @@ KCM.SimpleKCM {
     property bool progressBarAccentOnHover: true
     property alias cfg_panelIcon: panelIcon.value
     property alias cfg_useAlbumCoverAsPanelIcon: useAlbumCoverAsPanelIcon.checked
+    property alias cfg_useCustomPanelAppIconSize: useCustomPanelAppIconSize.checked
+    property alias cfg_panelAppIconSize: panelAppIconSize.value
     property alias cfg_albumCoverRadius: albumCoverRadius.value
     property alias cfg_bottomCornerRadius: bottomCornerRadius.value
     property alias cfg_commandsInPanel: commandsInPanel.checked
@@ -149,6 +151,38 @@ KCM.SimpleKCM {
             id: useAlbumCoverAsPanelIcon
             Kirigami.FormData.label: i18n("Album cover:")
             text: i18n("Use album cover as panel icon")
+        }
+
+        CheckBox {
+            id: useCustomPanelAppIconSize
+            Kirigami.FormData.label: i18n("App icon:")
+            text: i18n("Use custom source icon size")
+            enabled: !useAlbumCoverAsPanelIcon.checked
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Source icon size:")
+            enabled: !useAlbumCoverAsPanelIcon.checked && useCustomPanelAppIconSize.checked
+
+            Slider {
+                id: panelAppIconSize
+                from: 12
+                to: 96
+                stepSize: 1
+                Layout.preferredWidth: 200
+            }
+
+            SpinBox {
+                from: panelAppIconSize.from
+                to: panelAppIconSize.to
+                stepSize: panelAppIconSize.stepSize
+                value: panelAppIconSize.value
+                onValueChanged: panelAppIconSize.value = value
+            }
+
+            Label {
+                text: i18n("px")
+            }
         }
 
         Kirigami.Separator {

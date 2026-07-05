@@ -13,6 +13,7 @@ Item {
     property var imageRadius: null
     property var icon: null
     property real size: Kirigami.Units.iconSizes.medium
+    property real appIconSize: size
     property bool hoveredOnPlasmoid: false
 
     Mpris.Mpris2Model {
@@ -53,9 +54,9 @@ Item {
         // source: root.icon
         // Set source icon based on the current player
         source: mpris2Source.sourceName.includes('brave') ? mediaSources.brave : mpris2Source.sourceName.includes('fooyin') ? mediaSources.fooyin : mpris2Source.sourceName.includes('firefox') ? mediaSources.firefox : mpris2Source.sourceName.includes('chrome') ? mediaSources.chrome : mpris2Source.sourceName.includes('youtube') ? mediaSources.ytMusic : mpris2Source.sourceName.includes('zen') ? mediaSources.zen : mediaSources.music
-        // Set a fixed source size that's higher than display size
-        width: widget.height
+        width: Math.max(1, root.appIconSize)
         height: width
+        roundToIconSize: false
 
         smooth: true
         antialiasing: true

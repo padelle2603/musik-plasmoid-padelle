@@ -303,6 +303,7 @@ PlasmoidItem {
 
             PanelIcon {
                 size: compact.controlsSize
+                appIconSize: plasmoid.configuration.useCustomPanelAppIconSize ? plasmoid.configuration.panelAppIconSize : widget.height
                 icon: plasmoid.configuration.panelIcon
                 imageUrl: player.artUrl
                 imageRadius: plasmoid.configuration.albumCoverRadius
