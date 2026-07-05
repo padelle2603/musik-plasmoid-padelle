@@ -14,6 +14,10 @@ PlasmoidItem {
     id: widget
 
     Plasmoid.status: PlasmaCore.Types.HiddenStatus
+    Plasmoid.constraintHints: Plasmoid.CanFillArea
+
+    Layout.fillHeight: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
+    Layout.fillWidth: Plasmoid.formFactor === PlasmaCore.Types.Vertical
 
     // Disable unnecesary tooltip
     toolTipMainText: ""
@@ -217,15 +221,11 @@ PlasmoidItem {
             id: hoverBackground
             color: '#08FFFFFF' // 3% alpha white // or dominantColor if specified in the config
             radius: 3
-            anchors.fill: parent
+            width: parent.width
+            height: Math.max(0, widget.height - 7)
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
             visible: plasmoid.configuration.showHoverBackground
-            // anchors.topMargin: -2.3
-            // anchors.bottomMargin: -2.3
-
-            // Add negative margins to make the background slightly larger than the content (instead of using padding)
-            // Use this as some percentage of the widget's height (so that it scales with the widget)
-            anchors.topMargin: -widget.height * 0.12
-            anchors.bottomMargin: -widget.height * 0.12
 
             // Buttons have their own hover-enabled MouseAreas, which steal the
             // hover event from the compact mouseArea above. Fold their hover
