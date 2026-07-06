@@ -72,6 +72,9 @@ KCM.SimpleKCM {
     property alias cfg_afterPlayerControls: afterPlayerControls.value
     property alias cfg_playerControlsSpacing: playerControlsSpacing.value
     property alias cfg_controlsRowSpacing: controlsRowSpacing.value
+    property alias cfg_miniPlayerLeftMargin: miniPlayerLeftMargin.value
+    property alias cfg_miniPlayerRightMargin: miniPlayerRightMargin.value
+    property alias cfg_miniPlayerIconTextSpacing: miniPlayerIconTextSpacing.value
     property alias cfg_showHoverBackground: showHoverBackground.checked
     property alias cfg_centerPlayerText: centerPlayerText.checked
 
@@ -835,6 +838,64 @@ KCM.SimpleKCM {
         //     stepSize: 1
         //     Kirigami.FormData.label: i18n("Before album cover:")
         // }
+
+        ColumnLayout {
+            Label {
+                text: i18n("Mini player")
+                textFormat: Text.PlainText
+                wrapMode: Text.WordWrap
+                font.pointSize: 10
+                font.letterSpacing: 2
+                font.bold: true
+                font.capitalization: Font.AllUppercase
+                opacity: 0.5
+                Layout.topMargin: 6
+            }
+
+            spacing: 2
+
+            RowLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Label {
+                    text: i18n("Left margin:")
+                    Layout.minimumWidth: 160
+                }
+                SpinBox {
+                    id: miniPlayerLeftMargin
+                    from: 0
+                    to: 100
+                    stepSize: 1
+                }
+            }
+
+            RowLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Label {
+                    text: i18n("Right margin:")
+                    Layout.minimumWidth: 160
+                }
+                SpinBox {
+                    id: miniPlayerRightMargin
+                    from: 0
+                    to: 100
+                    stepSize: 1
+                }
+            }
+
+            RowLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Label {
+                    text: i18n("Icon to title spacing:")
+                    Layout.minimumWidth: 160
+                }
+                SpinBox {
+                    id: miniPlayerIconTextSpacing
+                    from: 0
+                    to: 100
+                    stepSize: 1
+                }
+            }
+        }
 
         ColumnLayout {
             Label {

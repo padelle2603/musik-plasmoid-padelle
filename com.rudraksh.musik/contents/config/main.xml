@@ -121,6 +121,15 @@
         <entry name="controlsRowSpacing" type="Int"> <!-- Between the entire row of player controls -->
             <default>32</default>
         </entry>
+        <entry name="miniPlayerLeftMargin" type="Int"> <!-- Compact representation left edge -->
+            <default>8</default>
+        </entry>
+        <entry name="miniPlayerRightMargin" type="Int"> <!-- Compact representation right edge -->
+            <default>16</default>
+        </entry>
+        <entry name="miniPlayerIconTextSpacing" type="Int"> <!-- Between source icon and compact text -->
+            <default>7</default>
+        </entry>
 
         <entry name="pin" type="Bool"> <!-- keep popup open on focus loss -->
             <default>false</default>

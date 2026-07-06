@@ -202,11 +202,14 @@ PlasmoidItem {
         id: compact
 
         // Layout.preferredWidth: row.implicitWidth + Kirigami.Units.smallSpacing * 2
-        Layout.preferredWidth: row.implicitWidth + Kirigami.Units.largeSpacing * 2
+        Layout.preferredWidth: row.implicitWidth + miniPlayerLeftMargin + miniPlayerRightMargin
         Layout.fillHeight: true
 
         readonly property real controlsSize: Math.min(height, Kirigami.Units.iconSizes.medium)
         readonly property real miniButtonSize: Math.min(Math.max(1, widget.height - 7), Math.max(1, Kirigami.Units.iconSizes.medium - 7)) - 3
+        readonly property int miniPlayerLeftMargin: Math.max(0, plasmoid.configuration.miniPlayerLeftMargin)
+        readonly property int miniPlayerRightMargin: Math.max(0, plasmoid.configuration.miniPlayerRightMargin)
+        readonly property int miniPlayerIconTextSpacing: Math.max(0, plasmoid.configuration.miniPlayerIconTextSpacing)
 
         MouseArea {
             // Use this area for all mouse interactions
@@ -301,6 +304,8 @@ PlasmoidItem {
             implicitWidth: row.implicitWidth //+ Kirigami.Units.largeSpacing
 
             anchors.fill: parent
+            anchors.leftMargin: compact.miniPlayerLeftMargin
+            anchors.rightMargin: compact.miniPlayerRightMargin
 
             PanelIcon {
                 size: compact.controlsSize
@@ -309,8 +314,7 @@ PlasmoidItem {
                 imageUrl: player.artUrl
                 imageRadius: plasmoid.configuration.albumCoverRadius
                 type: plasmoid.configuration.useAlbumCoverAsPanelIcon ? "image": "icon"
-                Layout.leftMargin: Kirigami.Units.smallSpacing * 2
-                Layout.rightMargin: 2
+                Layout.rightMargin: 0
                 hoveredOnPlasmoid: mouseArea.containsMouse
             }
 
@@ -320,7 +324,7 @@ PlasmoidItem {
                 Layout.alignment: Qt.AlignVCenter
 
                 // Add some spacing to the left
-                Layout.leftMargin: Kirigami.Units.largeSpacing
+                Layout.leftMargin: compact.miniPlayerIconTextSpacing
 
                 // Blur + scale + fade on song change (album-cover style) — the
                 // horizontal glide reads as too much in the mini player.
@@ -376,7 +380,7 @@ PlasmoidItem {
             SongSwapText {
                 visible: !plasmoid.configuration.separateText
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: 5 // Some spacing to the left of the text
+                Layout.leftMargin: compact.miniPlayerIconTextSpacing
                 Layout.rightMargin: -5 // Some spacing to the right of the text
 
                 centerContent: false
