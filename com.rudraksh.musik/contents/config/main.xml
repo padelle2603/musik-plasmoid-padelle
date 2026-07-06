@@ -130,6 +130,12 @@
         <entry name="miniPlayerIconTextSpacing" type="Int"> <!-- Between source icon and compact text -->
             <default>7</default>
         </entry>
+        <entry name="miniPlayerTextControlsSpacing" type="Int"> <!-- Between compact text and media controls -->
+            <default>6</default>
+        </entry>
+        <entry name="miniPlayerControlsOnHover" type="Bool">
+            <default>false</default>
+        </entry>
 
         <entry name="pin" type="Bool"> <!-- keep popup open on focus loss -->
             <default>false</default>

@@ -75,6 +75,8 @@ KCM.SimpleKCM {
     property alias cfg_miniPlayerLeftMargin: miniPlayerLeftMargin.value
     property alias cfg_miniPlayerRightMargin: miniPlayerRightMargin.value
     property alias cfg_miniPlayerIconTextSpacing: miniPlayerIconTextSpacing.value
+    property alias cfg_miniPlayerTextControlsSpacing: miniPlayerTextControlsSpacing.value
+    property alias cfg_miniPlayerControlsOnHover: miniPlayerControlsOnHover.checked
     property alias cfg_showHoverBackground: showHoverBackground.checked
     property alias cfg_centerPlayerText: centerPlayerText.checked
 
@@ -894,6 +896,25 @@ KCM.SimpleKCM {
                     to: 100
                     stepSize: 1
                 }
+            }
+
+            RowLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Label {
+                    text: i18n("Text to controls spacing:")
+                    Layout.minimumWidth: 160
+                }
+                SpinBox {
+                    id: miniPlayerTextControlsSpacing
+                    from: 0
+                    to: 100
+                    stepSize: 1
+                }
+            }
+
+            CheckBox {
+                id: miniPlayerControlsOnHover
+                text: i18n("Only show media controls on hover")
             }
         }
 

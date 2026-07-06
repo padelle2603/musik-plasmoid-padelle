@@ -210,6 +210,19 @@ PlasmoidItem {
         readonly property int miniPlayerLeftMargin: Math.max(0, plasmoid.configuration.miniPlayerLeftMargin)
         readonly property int miniPlayerRightMargin: Math.max(0, plasmoid.configuration.miniPlayerRightMargin)
         readonly property int miniPlayerIconTextSpacing: Math.max(0, plasmoid.configuration.miniPlayerIconTextSpacing)
+        readonly property int miniPlayerTextControlsSpacing: Math.max(0, plasmoid.configuration.miniPlayerTextControlsSpacing)
+        readonly property bool mediaControlsHovered: mouseArea.containsMouse || widget.expanded
+                                                   || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
+        readonly property bool mediaControlsExpanded: plasmoid.configuration.commandsInPanel
+                                                      && (!plasmoid.configuration.miniPlayerControlsOnHover || mediaControlsHovered)
+        readonly property real mediaControlsWidth: compact.miniButtonSize * 3
+        property real mediaControlsSlotWidth: plasmoid.configuration.commandsInPanel
+                                              ? (mediaControlsExpanded ? mediaControlsWidth + miniPlayerTextControlsSpacing : 0)
+                                              : 0
+
+        Behavior on mediaControlsSlotWidth {
+            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+        }
 
         MouseArea {
             // Use this area for all mouse interactions
@@ -381,7 +394,7 @@ PlasmoidItem {
                 visible: !plasmoid.configuration.separateText
                 Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: compact.miniPlayerIconTextSpacing
-                Layout.rightMargin: -5 // Some spacing to the right of the text
+                Layout.rightMargin: 0
 
                 centerContent: false
                 scaleIn: true
@@ -404,51 +417,66 @@ PlasmoidItem {
 
 
             // Move the tool buttons to a row grid layout
-            RowLayout {
+            Item {
+                id: mediaControlsSlot
                 Layout.alignment: Qt.AlignVCenter
-                Layout.fillWidth: true
-                Layout.leftMargin: 6 // Space to the left of the buttons
-                Layout.rightMargin: 0 // Space to the right of the buttons
-                Layout.minimumWidth: compact.miniButtonSize * 3
-                Layout.maximumWidth: compact.miniButtonSize * 3
-                spacing: 0 // Space between the buttons
+                Layout.minimumWidth: compact.mediaControlsSlotWidth
+                Layout.preferredWidth: compact.mediaControlsSlotWidth
+                Layout.maximumWidth: compact.mediaControlsSlotWidth
+                Layout.preferredHeight: compact.miniButtonSize
+                clip: true
+                enabled: compact.mediaControlsExpanded
 
-                MiniPlayerButton {
-                    id: btnPrev
-                    visible: plasmoid.configuration.commandsInPanel
-                    active: player.canGoPrevious
-                    size: compact.miniButtonSize
-                    iconSource: iconSources.compactPrev
-                    hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
-                                       || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
-                    onClicked: {
-                        widget.textSwapDir = -1  // glide right
-                        player.previous()
+                RowLayout {
+                    id: mediaControls
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: compact.mediaControlsWidth
+                    height: parent.height
+                    spacing: 0 // Space between the buttons
+                    opacity: compact.mediaControlsExpanded ? 1.0 : 0.0
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                     }
-                }
 
-                MiniPlayerButton {
-                    id: btnPlay
-                    visible: plasmoid.configuration.commandsInPanel
-                    active: player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay
-                    size: compact.miniButtonSize
-                    iconSource: player.playbackStatus === Mpris.PlaybackStatus.Playing ? iconSources.compactPause : iconSources.compactPlay
-                    hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
-                                       || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
-                    onClicked: player.playPause()
-                }
+                    MiniPlayerButton {
+                        id: btnPrev
+                        visible: plasmoid.configuration.commandsInPanel
+                        active: player.canGoPrevious
+                        size: compact.miniButtonSize
+                        iconSource: iconSources.compactPrev
+                        hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
+                                           || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
+                        onClicked: {
+                            widget.textSwapDir = -1  // glide right
+                            player.previous()
+                        }
+                    }
 
-                MiniPlayerButton {
-                    id: btnNext
-                    visible: plasmoid.configuration.commandsInPanel
-                    active: player.canGoNext
-                    size: compact.miniButtonSize
-                    iconSource: iconSources.compactNext
-                    hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
-                                       || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
-                    onClicked: {
-                        widget.textSwapDir = 1  // glide left
-                        player.next()
+                    MiniPlayerButton {
+                        id: btnPlay
+                        visible: plasmoid.configuration.commandsInPanel
+                        active: player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay
+                        size: compact.miniButtonSize
+                        iconSource: player.playbackStatus === Mpris.PlaybackStatus.Playing ? iconSources.compactPause : iconSources.compactPlay
+                        hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
+                                           || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
+                        onClicked: player.playPause()
+                    }
+
+                    MiniPlayerButton {
+                        id: btnNext
+                        visible: plasmoid.configuration.commandsInPanel
+                        active: player.canGoNext
+                        size: compact.miniButtonSize
+                        iconSource: iconSources.compactNext
+                        hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
+                                           || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
+                        onClicked: {
+                            widget.textSwapDir = 1  // glide left
+                            player.next()
+                        }
                     }
                 }
             }
