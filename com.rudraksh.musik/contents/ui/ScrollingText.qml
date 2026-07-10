@@ -32,8 +32,8 @@ Item {
     property real lastPauseX: 0
     property real dampingDuration: 800 // ms to slow down after unhover
 
-    width: Math.min(maxWidth, textMetrics.width)
-    height: mainText.height
+    width: Math.ceil(Math.min(maxWidth, textMetrics.width))
+    height: Math.ceil(mainText.height)
     clip: true
 
     // Edge fade mask. Right edge fades whenever the text overflows;
@@ -52,6 +52,7 @@ Item {
     readonly property real fadeRatio: Math.min(0.2, 24 / Math.max(width, 1))
 
     layer.enabled: shouldScroll
+    layer.smooth: false
     layer.effect: OpacityMask {
         maskSource: Rectangle {
             width: root.width
@@ -192,6 +193,12 @@ Item {
                 }
 
                 layer.enabled: !fullRepresentation
+                // Plasma may reposition the whole compact applet by a
+                // fractional scene pixel when neighbouring applets resize.
+                // Bilinear sampling then softens this cached text layer even
+                // though the label itself has integer-local coordinates.
+                layer.smooth: false
+                layer.textureSize: Qt.size(Math.ceil(width * 3), Math.ceil(height * 3))
                 layer.effect: MultiEffect {
                     brightness: 0.8
                     contrast: 0.07
@@ -222,6 +229,8 @@ Item {
                 }
 
                 layer.enabled: !fullRepresentation
+                layer.smooth: false
+                layer.textureSize: Qt.size(Math.ceil(width * 3), Math.ceil(height * 3))
                 layer.effect: MultiEffect {
                     brightness: 0.8
                     contrast: 0.07
@@ -283,7 +292,7 @@ Item {
 
             // Reset to correct position
             scrollContainer.x = horizontalAlignment === Text.AlignHCenter ?
-                Math.min(0, (root.width - textMetrics.width) / 2) : 0
+                Math.round(Math.min(0, (root.width - textMetrics.width) / 2)) : 0
         }
     }
 

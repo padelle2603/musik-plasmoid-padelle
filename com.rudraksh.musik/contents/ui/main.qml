@@ -215,12 +215,13 @@ PlasmoidItem {
                                                    || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
         readonly property bool mediaControlsExpanded: plasmoid.configuration.commandsInPanel
                                                       && (!plasmoid.configuration.miniPlayerControlsOnHover || mediaControlsHovered)
-        readonly property real mediaControlsWidth: compact.miniButtonSize * 3
-        property real mediaControlsSlotWidth: plasmoid.configuration.commandsInPanel
-                                              ? (mediaControlsExpanded ? mediaControlsWidth + miniPlayerTextControlsSpacing : 0)
-                                              : 0
+        property real sideControlsWidth: mediaControlsExpanded ? compact.miniButtonSize : 0
+        readonly property real mediaControlsWidth: compact.miniButtonSize + sideControlsWidth * 2
+        readonly property real mediaControlsSlotWidth: plasmoid.configuration.commandsInPanel
+                                                       ? mediaControlsWidth + miniPlayerTextControlsSpacing
+                                                       : 0
 
-        Behavior on mediaControlsSlotWidth {
+        Behavior on sideControlsWidth {
             NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
         }
 
@@ -425,7 +426,7 @@ PlasmoidItem {
                 Layout.maximumWidth: compact.mediaControlsSlotWidth
                 Layout.preferredHeight: compact.miniButtonSize
                 clip: true
-                enabled: compact.mediaControlsExpanded
+                enabled: plasmoid.configuration.commandsInPanel
 
                 RowLayout {
                     id: mediaControls
@@ -434,15 +435,15 @@ PlasmoidItem {
                     width: compact.mediaControlsWidth
                     height: parent.height
                     spacing: 0 // Space between the buttons
-                    opacity: compact.mediaControlsExpanded ? 1.0 : 0.0
-
-                    Behavior on opacity {
-                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-                    }
 
                     MiniPlayerButton {
                         id: btnPrev
                         visible: plasmoid.configuration.commandsInPanel
+                        clip: true
+                        Layout.minimumWidth: compact.sideControlsWidth
+                        Layout.preferredWidth: compact.sideControlsWidth
+                        Layout.maximumWidth: compact.sideControlsWidth
+                        opacity: compact.mediaControlsExpanded ? 1.0 : 0.0
                         active: player.canGoPrevious
                         size: compact.miniButtonSize
                         iconSource: iconSources.compactPrev
@@ -451,6 +452,10 @@ PlasmoidItem {
                         onClicked: {
                             widget.textSwapDir = -1  // glide right
                             player.previous()
+                        }
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -468,6 +473,11 @@ PlasmoidItem {
                     MiniPlayerButton {
                         id: btnNext
                         visible: plasmoid.configuration.commandsInPanel
+                        clip: true
+                        Layout.minimumWidth: compact.sideControlsWidth
+                        Layout.preferredWidth: compact.sideControlsWidth
+                        Layout.maximumWidth: compact.sideControlsWidth
+                        opacity: compact.mediaControlsExpanded ? 1.0 : 0.0
                         active: player.canGoNext
                         size: compact.miniButtonSize
                         iconSource: iconSources.compactNext
@@ -476,6 +486,10 @@ PlasmoidItem {
                         onClicked: {
                             widget.textSwapDir = 1  // glide left
                             player.next()
+                        }
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                         }
                     }
                 }
