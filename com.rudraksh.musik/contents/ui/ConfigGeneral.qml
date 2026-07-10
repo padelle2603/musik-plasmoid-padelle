@@ -77,6 +77,7 @@ KCM.SimpleKCM {
     property alias cfg_miniPlayerIconTextSpacing: miniPlayerIconTextSpacing.value
     property alias cfg_miniPlayerTextControlsSpacing: miniPlayerTextControlsSpacing.value
     property alias cfg_miniPlayerControlsOnHover: miniPlayerControlsOnHover.checked
+    property alias cfg_miniPlayerMediaButtonScale: miniPlayerMediaButtonScale.value
     property alias cfg_showHoverBackground: showHoverBackground.checked
     property alias cfg_centerPlayerText: centerPlayerText.checked
 
@@ -909,6 +910,25 @@ KCM.SimpleKCM {
                     from: 0
                     to: 100
                     stepSize: 1
+                }
+            }
+
+            RowLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Label {
+                    text: i18n("Media button size:")
+                    Layout.minimumWidth: 160
+                }
+                Slider {
+                    id: miniPlayerMediaButtonScale
+                    from: 0.6
+                    to: 1.4
+                    stepSize: 0.05
+                    Layout.preferredWidth: 140
+                }
+                Label {
+                    text: miniPlayerMediaButtonScale.value.toFixed(2) + "x"
+                    Layout.minimumWidth: 40
                 }
             }
 

@@ -64,7 +64,7 @@ Item {
         }
 
         layer.enabled: true
-        layer.smooth: true
+        layer.smooth: false
         layer.textureSize: Qt.size(Math.ceil(width * 3), Math.ceil(height * 3))
         layer.effect: MultiEffect {
             brightness: 0.8

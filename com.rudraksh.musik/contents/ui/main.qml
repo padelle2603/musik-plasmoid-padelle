@@ -206,7 +206,9 @@ PlasmoidItem {
         Layout.fillHeight: true
 
         readonly property real controlsSize: Math.min(height, Kirigami.Units.iconSizes.medium)
-        readonly property real miniButtonSize: Math.min(Math.max(1, widget.height - 7), Math.max(1, Kirigami.Units.iconSizes.medium - 7)) - 3
+        readonly property real miniButtonScale: Math.max(0.6, Math.min(1.4, plasmoid.configuration.miniPlayerMediaButtonScale || 1.0))
+        readonly property real miniButtonBaseSize: Math.min(Math.max(1, widget.height - 7), Math.max(1, Kirigami.Units.iconSizes.medium - 7)) - 3
+        readonly property real miniButtonSize: Math.max(1, Math.round(miniButtonBaseSize * miniButtonScale))
         readonly property int miniPlayerLeftMargin: Math.max(0, plasmoid.configuration.miniPlayerLeftMargin)
         readonly property int miniPlayerRightMargin: Math.max(0, plasmoid.configuration.miniPlayerRightMargin)
         readonly property int miniPlayerIconTextSpacing: Math.max(0, plasmoid.configuration.miniPlayerIconTextSpacing)

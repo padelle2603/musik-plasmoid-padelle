@@ -136,6 +136,9 @@
         <entry name="miniPlayerControlsOnHover" type="Bool">
             <default>false</default>
         </entry>
+        <entry name="miniPlayerMediaButtonScale" type="Double">
+            <default>1.0</default>
+        </entry>
 
         <entry name="pin" type="Bool"> <!-- keep popup open on focus loss -->
             <default>false</default>
