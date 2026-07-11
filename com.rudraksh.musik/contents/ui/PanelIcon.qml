@@ -48,26 +48,24 @@ Item {
         readonly property string zen:     Qt.resolvedUrl("assets/zen_mono.svg")
     }
 
-    Kirigami.Icon {
+    Image {
         visible: type === "icon"
         id: iconComponent
-        // source: root.icon
         // Set source icon based on the current player
         source: mpris2Source.sourceName.includes('brave') ? mediaSources.brave : mpris2Source.sourceName.includes('fooyin') ? mediaSources.fooyin : mpris2Source.sourceName.includes('firefox') ? mediaSources.firefox : mpris2Source.sourceName.includes('chrome') ? mediaSources.chrome : mpris2Source.sourceName.includes('youtube') ? mediaSources.ytMusic : mpris2Source.sourceName.includes('zen') ? mediaSources.zen : mediaSources.music
         width: Math.max(1, root.appIconSize)
         height: width
-        roundToIconSize: false
-
+        sourceSize: Qt.size(Math.ceil(width * 3), Math.ceil(height * 3))
+        fillMode: Image.PreserveAspectFit
         smooth: true
-        antialiasing: true
+        antialiasing: false
 
-        color: Kirigami.Theme.textColor
         opacity: hoveredOnPlasmoid ? 0.55 : 0.4
 
         layer.enabled: true
-        layer.smooth: false
+        layer.smooth: true
+        layer.mipmap: true
         layer.textureSize: Qt.size(Math.ceil(width * 3), Math.ceil(height * 3))
-        layer.samples: 8
         layer.effect: MultiEffect {
             brightness: 0.8
             contrast: 0.07
