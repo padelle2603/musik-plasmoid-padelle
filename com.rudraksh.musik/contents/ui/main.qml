@@ -213,6 +213,9 @@ PlasmoidItem {
         readonly property int miniPlayerRightMargin: Math.max(0, plasmoid.configuration.miniPlayerRightMargin)
         readonly property int miniPlayerIconTextSpacing: Math.max(0, plasmoid.configuration.miniPlayerIconTextSpacing)
         readonly property int miniPlayerTextControlsSpacing: Math.max(0, plasmoid.configuration.miniPlayerTextControlsSpacing)
+        readonly property real sourceIconVerticalOffset: plasmoid.configuration.miniPlayerSourceIconVerticalOffset || 0
+        readonly property real textVerticalOffset: plasmoid.configuration.miniPlayerTextVerticalOffset || 0
+        readonly property real mediaControlsVerticalOffset: plasmoid.configuration.miniPlayerMediaControlsVerticalOffset || 0
         readonly property bool mediaControlsHovered: mouseArea.containsMouse || widget.expanded
                                                    || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
         readonly property bool mediaControlsExpanded: plasmoid.configuration.commandsInPanel
@@ -332,6 +335,7 @@ PlasmoidItem {
                 type: plasmoid.configuration.useAlbumCoverAsPanelIcon ? "image": "icon"
                 Layout.rightMargin: 0
                 hoveredOnPlasmoid: mouseArea.containsMouse
+                transform: Translate { y: compact.sourceIconVerticalOffset }
             }
 
             // Separate Title and Artist
@@ -348,6 +352,7 @@ PlasmoidItem {
                 scaleIn: true
                 blurStrength: 12
                 trigger: player.title
+                transform: Translate { y: compact.textVerticalOffset }
 
                 ColumnLayout {
                     id: column
@@ -403,6 +408,7 @@ PlasmoidItem {
                 scaleIn: true
                 blurStrength: 12
                 trigger: player.title
+                transform: Translate { y: compact.textVerticalOffset }
 
                 ScrollingText {
                     overflowBehaviour: plasmoid.configuration.textScrollingBehaviour
@@ -429,6 +435,7 @@ PlasmoidItem {
                 Layout.preferredHeight: compact.miniButtonSize
                 clip: true
                 enabled: plasmoid.configuration.commandsInPanel
+                transform: Translate { y: compact.mediaControlsVerticalOffset }
 
                 RowLayout {
                     id: mediaControls

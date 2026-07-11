@@ -139,6 +139,15 @@
         <entry name="miniPlayerMediaButtonScale" type="Double">
             <default>1.0</default>
         </entry>
+        <entry name="miniPlayerSourceIconVerticalOffset" type="Double">
+            <default>0.0</default>
+        </entry>
+        <entry name="miniPlayerTextVerticalOffset" type="Double">
+            <default>0.0</default>
+        </entry>
+        <entry name="miniPlayerMediaControlsVerticalOffset" type="Double">
+            <default>0.0</default>
+        </entry>
 
         <entry name="pin" type="Bool"> <!-- keep popup open on focus loss -->
             <default>false</default>

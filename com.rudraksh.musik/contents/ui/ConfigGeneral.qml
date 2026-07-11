@@ -78,6 +78,9 @@ KCM.SimpleKCM {
     property alias cfg_miniPlayerTextControlsSpacing: miniPlayerTextControlsSpacing.value
     property alias cfg_miniPlayerControlsOnHover: miniPlayerControlsOnHover.checked
     property alias cfg_miniPlayerMediaButtonScale: miniPlayerMediaButtonScale.value
+    property alias cfg_miniPlayerSourceIconVerticalOffset: miniPlayerSourceIconVerticalOffset.value
+    property alias cfg_miniPlayerTextVerticalOffset: miniPlayerTextVerticalOffset.value
+    property alias cfg_miniPlayerMediaControlsVerticalOffset: miniPlayerMediaControlsVerticalOffset.value
     property alias cfg_showHoverBackground: showHoverBackground.checked
     property alias cfg_centerPlayerText: centerPlayerText.checked
 
@@ -929,6 +932,63 @@ KCM.SimpleKCM {
                 Label {
                     text: miniPlayerMediaButtonScale.value.toFixed(2) + "x"
                     Layout.minimumWidth: 40
+                }
+            }
+
+            RowLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Label {
+                    text: i18n("Source icon vertical offset:")
+                    Layout.minimumWidth: 160
+                }
+                Slider {
+                    id: miniPlayerSourceIconVerticalOffset
+                    from: -10
+                    to: 10
+                    stepSize: 0.1
+                    Layout.preferredWidth: 140
+                }
+                Label {
+                    text: miniPlayerSourceIconVerticalOffset.value.toFixed(1) + " px"
+                    Layout.minimumWidth: 48
+                }
+            }
+
+            RowLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Label {
+                    text: i18n("Text vertical offset:")
+                    Layout.minimumWidth: 160
+                }
+                Slider {
+                    id: miniPlayerTextVerticalOffset
+                    from: -10
+                    to: 10
+                    stepSize: 0.1
+                    Layout.preferredWidth: 140
+                }
+                Label {
+                    text: miniPlayerTextVerticalOffset.value.toFixed(1) + " px"
+                    Layout.minimumWidth: 48
+                }
+            }
+
+            RowLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Label {
+                    text: i18n("Media controls vertical offset:")
+                    Layout.minimumWidth: 160
+                }
+                Slider {
+                    id: miniPlayerMediaControlsVerticalOffset
+                    from: -10
+                    to: 10
+                    stepSize: 0.1
+                    Layout.preferredWidth: 140
+                }
+                Label {
+                    text: miniPlayerMediaControlsVerticalOffset.value.toFixed(1) + " px"
+                    Layout.minimumWidth: 48
                 }
             }
 
