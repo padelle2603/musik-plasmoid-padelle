@@ -216,17 +216,26 @@ PlasmoidItem {
         readonly property real sourceIconVerticalOffset: plasmoid.configuration.miniPlayerSourceIconVerticalOffset || 0
         readonly property real textVerticalOffset: plasmoid.configuration.miniPlayerTextVerticalOffset || 0
         readonly property real mediaControlsVerticalOffset: plasmoid.configuration.miniPlayerMediaControlsVerticalOffset || 0
+        readonly property bool hasTrackMetadata: player.title.length > 0 || player.artists.length > 0
         readonly property bool mediaControlsHovered: mouseArea.containsMouse || widget.expanded
                                                    || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
         readonly property bool mediaControlsExpanded: plasmoid.configuration.commandsInPanel
-                                                      && (!plasmoid.configuration.miniPlayerControlsOnHover || mediaControlsHovered)
+                                                      && (mediaControlsHovered
+                                                          || (hasTrackMetadata && !plasmoid.configuration.miniPlayerControlsOnHover))
+        readonly property bool playControlVisible: plasmoid.configuration.commandsInPanel
+                                                   && (hasTrackMetadata || mediaControlsHovered)
         property real sideControlsWidth: mediaControlsExpanded ? compact.miniButtonSize : 0
-        readonly property real mediaControlsWidth: compact.miniButtonSize + sideControlsWidth * 2
-        readonly property real mediaControlsSlotWidth: plasmoid.configuration.commandsInPanel
-                                                       ? mediaControlsWidth + miniPlayerTextControlsSpacing
-                                                       : 0
+        property real playControlWidth: playControlVisible ? compact.miniButtonSize : 0
+        readonly property real mediaControlsWidth: playControlWidth + sideControlsWidth * 2
+        readonly property real mediaControlsSlotWidth: mediaControlsWidth
+                                                       + miniPlayerTextControlsSpacing
+                                                         * playControlWidth / compact.miniButtonSize
 
         Behavior on sideControlsWidth {
+            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+        }
+
+        Behavior on playControlWidth {
             NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
         }
 
@@ -344,7 +353,7 @@ PlasmoidItem {
                 Layout.alignment: Qt.AlignVCenter
 
                 // Add some spacing to the left
-                Layout.leftMargin: compact.miniPlayerIconTextSpacing
+                Layout.leftMargin: compact.hasTrackMetadata ? compact.miniPlayerIconTextSpacing : 0
 
                 // Blur + scale + fade on song change (album-cover style) — the
                 // horizontal glide reads as too much in the mini player.
@@ -401,7 +410,7 @@ PlasmoidItem {
             SongSwapText {
                 visible: !plasmoid.configuration.separateText
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: compact.miniPlayerIconTextSpacing
+                Layout.leftMargin: compact.hasTrackMetadata ? compact.miniPlayerIconTextSpacing : 0
                 Layout.rightMargin: 0
 
                 centerContent: false
@@ -471,12 +480,21 @@ PlasmoidItem {
                     MiniPlayerButton {
                         id: btnPlay
                         visible: plasmoid.configuration.commandsInPanel
+                        clip: true
+                        Layout.minimumWidth: compact.playControlWidth
+                        Layout.preferredWidth: compact.playControlWidth
+                        Layout.maximumWidth: compact.playControlWidth
+                        opacity: compact.playControlVisible ? 1.0 : 0.0
                         active: player.playbackStatus === Mpris.PlaybackStatus.Playing ? player.canPause : player.canPlay
                         size: compact.miniButtonSize
                         iconSource: player.playbackStatus === Mpris.PlaybackStatus.Playing ? iconSources.compactPause : iconSources.compactPlay
                         hoveredOnPlasmoid: mouseArea.containsMouse || widget.expanded
                                            || btnPrev.hovered || btnPlay.hovered || btnNext.hovered
                         onClicked: player.playPause()
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
                     }
 
                     MiniPlayerButton {
