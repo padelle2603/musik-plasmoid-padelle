@@ -155,11 +155,35 @@ PlasmoidItem {
 
     readonly property font fullPlayerSongNameFont: {
         if (plasmoid.configuration.fullPlayerSongNameUseCustomFont) {
-            let font = plasmoid.configuration.fullPlayerSongNameFont
-            font.letterSpacing = plasmoid.configuration.fullPlayerSongNameSpacing
-            font.capitalization = plasmoid.configuration.fullPlayerSongNameCapitalize ?
-                                Font.AllUppercase : Font.MixedCase
-            return font
+            const configuredFont = plasmoid.configuration.fullPlayerSongNameFont
+            const fontProperties = {
+                family: configuredFont.family,
+                letterSpacing: plasmoid.configuration.fullPlayerSongNameSpacing,
+                capitalization: plasmoid.configuration.fullPlayerSongNameCapitalize
+                                ? Font.AllUppercase : Font.MixedCase,
+                underline: configuredFont.underline,
+                strikeout: configuredFont.strikeout,
+                kerning: configuredFont.kerning
+            }
+
+            // Rebuild the QFont request after configuration deserialization.
+            // Variable-font named instances are selected by styleName; mixing
+            // that with weight/italic matching can make Qt choose a fallback
+            // face after plasmashell starts in a fresh process.
+            if (configuredFont.styleName) {
+                fontProperties.styleName = configuredFont.styleName
+            } else {
+                fontProperties.weight = configuredFont.weight
+                fontProperties.italic = configuredFont.italic
+            }
+
+            if (configuredFont.pixelSize > 0) {
+                fontProperties.pixelSize = configuredFont.pixelSize
+            } else {
+                fontProperties.pointSize = configuredFont.pointSize
+            }
+
+            return Qt.font(fontProperties)
         }
         // return Kirigami.Theme.defaultFont
         return Qt.font({
