@@ -25,6 +25,33 @@ KCM.SimpleKCM {
     property alias cfg_separateText: separateText.checked
     property alias cfg_textScrollingBehaviour: scrollingBehaviourRadio.value
 
+    function cleanTargetName(input) {
+        if (!input) return "";
+        let clean = input.trim();
+        if (clean.endsWith(".desktop")) {
+            clean = clean.substring(0, clean.length - 8);
+        }
+        const slashIdx = clean.lastIndexOf("/");
+        if (slashIdx !== -1) {
+            clean = clean.substring(slashIdx + 1);
+        }
+        return clean.toLowerCase();
+    }
+
+    function addAndSelectSource(name) {
+        const clean = cleanTargetName(name);
+        if (!clean) return;
+        let list = [...sourceComboBox.model];
+        let idx = list.indexOf(clean);
+        if (idx === -1) {
+            list.push(clean);
+            sourceComboBox.model = list;
+            sourceComboBox.currentIndex = list.length - 1;
+        } else {
+            sourceComboBox.currentIndex = idx;
+        }
+    }
+
     // property alias cfg_useCustomFont: customFontCheckbox.checked
     // property alias cfg_customFont: fontDialog.fontChosen
 
@@ -215,30 +242,75 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Audio Source")
         }
 
-        ComboBox {
-            id: sourceComboBox
-            editable: true
+        RowLayout {
+            Kirigami.FormData.label: i18n("Target app (.desktop or binary):")
+            spacing: Kirigami.Units.smallSpacing
 
-            onAccepted: () => {
-                let clean = editText.trim();
-                if (clean.endsWith(".desktop")) {
-                    clean = clean.substring(0, clean.length - 8);
-                }
-                const slashIdx = clean.lastIndexOf("/");
-                if (slashIdx !== -1) {
-                    clean = clean.substring(slashIdx + 1);
-                }
-                if (clean.length > 0 && find(clean) === -1) {
-                    model = [...model, clean];
-                    currentIndex = model.length - 1;
+            ComboBox {
+                id: sourceComboBox
+                editable: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+
+                onAccepted: () => {
+                    addAndSelectSource(editText);
                 }
             }
 
-            Kirigami.FormData.label: i18n("Target app (.desktop or binary):")
+            Button {
+                text: i18n("Import...")
+                icon.name: "document-open"
+                onClicked: appFileDialog.open()
+            }
+        }
+
+        QtDialogs.FileDialog {
+            id: appFileDialog
+            title: i18n("Select an executable or .desktop file")
+            currentFolder: "file:///usr/share/applications"
+            nameFilters: [
+                i18n("Desktop entries and binaries (*.desktop *)"),
+                i18n("Desktop entries (*.desktop)"),
+                i18n("All files (*)")
+            ]
+            onAccepted: {
+                let fileUrl = selectedFile.toString();
+                let path = decodeURIComponent(fileUrl.replace(/^file:\/\//, ""));
+                let baseName = path.split("/").pop();
+
+                if (baseName.endsWith(".desktop")) {
+                    try {
+                        let xhr = new XMLHttpRequest();
+                        xhr.open("GET", fileUrl, false);
+                        xhr.send(null);
+                        if (xhr.status === 200 || xhr.status === 0) {
+                            let lines = xhr.responseText.split("\n");
+                            let execVal = "";
+                            for (let i = 0; i < lines.length; i++) {
+                                let trimmed = lines[i].trim();
+                                if (trimmed.startsWith("Exec=")) {
+                                    execVal = trimmed.substring(5).trim();
+                                    break;
+                                }
+                            }
+                            if (execVal) {
+                                let execBin = execVal.split(/\s+/)[0];
+                                execBin = execBin.split("/").pop();
+                                if (execBin) {
+                                    addAndSelectSource(execBin);
+                                    return;
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // Fallback below
+                    }
+                }
+                addAndSelectSource(baseName);
+            }
         }
 
         Label {
-            text: i18n("Select 'any' to automatically detect playing music and mix system audio. Enter a binary name or .desktop ID (e.g. spotify, vlc, discord) to strictly track that app's metadata and isolate its audio stream.")
+            text: i18n("Select 'any' to automatically detect playing music and mix system audio. Enter or import an executable / .desktop file (e.g. spotify, vlc, discord) to strictly track only that app's metadata and isolate its audio waveform.")
             font.pointSize: Kirigami.Theme.smallFont.pointSize
             opacity: 0.6
             wrapMode: Text.WordWrap

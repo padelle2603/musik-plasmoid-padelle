@@ -90,7 +90,10 @@ PlasmoidItem {
         function onVisibleChanged() {
             if (QtQuick.Window.window.visible) {
                 console.log("Window became visible, checking for active sources");
-                player.updatingFromPlayer = true;
+                const currentCfg = plasmoid.configuration.sources[plasmoid.configuration.sourceIndex];
+                if (currentCfg === "any") {
+                    player.updatingFromPlayer = true;
+                }
                 player.selectActiveSource();
             }
         }

@@ -23,16 +23,25 @@ QtObject {
     }
 
     property string sourceName: "any"
-    property bool prioritizePlayingSource: true // New property to control priority behavior
+    property bool prioritizePlayingSource: true
 
-    // Match source name against player's desktopEntry, identity, or executable base name
+    // Match source name against player's desktopEntry or executable base name
     function playerMatches(player, name) {
         if (!name || name === "any") return true
-        const lower = name.toLowerCase()
-        const desktopEntry = player.desktopEntry?.toLowerCase() ?? ""
-        const identity = player.identity?.toLowerCase() ?? ""
-        const processBinary = player.identity?.match(/\/([^\/]+)$/)?.[1]?.toLowerCase() ?? ""
-        return desktopEntry === lower || identity.includes(lower) || processBinary.includes(lower)
+        let clean = name.toLowerCase().trim()
+        if (clean.endsWith(".desktop")) {
+            clean = clean.substring(0, clean.length - 8)
+        }
+        const slash = clean.lastIndexOf("/")
+        if (slash !== -1) {
+            clean = clean.substring(slash + 1)
+        }
+
+        const desktopEntry = (player.desktopEntry || "").toLowerCase()
+        const identity = (player.identity || "").toLowerCase()
+        const idBase = identity.match(/([^\/\s]+)$/)?.[1] || identity
+
+        return desktopEntry === clean || identity === clean || idBase === clean
     }
 
     readonly property bool ready: {
@@ -65,15 +74,22 @@ QtObject {
 
     // Check if any players have started playing
     function checkPlayingPlayers() {
-        if (!prioritizePlayingSource) return;
-
-        // Only look for playing sources if we don't already have one
-        if (ready && mpris2Model.currentPlayer &&
-            mpris2Model.currentPlayer.playbackStatus === Mpris.PlaybackStatus.Playing) {
-            return; // Already have a playing source selected
+        if (sourceName !== "any") {
+            // When targeting a specific app, only seek that app if not already selected
+            if (!ready || !playerMatches(mpris2Model.currentPlayer, sourceName)) {
+                selectActiveSource();
+            }
+            return;
         }
 
-        // Otherwise scan for any playing sources
+        if (!prioritizePlayingSource) return;
+
+        // Only look for playing sources if we don't already have one playing
+        if (ready && mpris2Model.currentPlayer &&
+            mpris2Model.currentPlayer.playbackStatus === Mpris.PlaybackStatus.Playing) {
+            return;
+        }
+
         selectActiveSource();
     }
 
@@ -81,74 +97,56 @@ QtObject {
     function selectPlayerSource(rowIndex) {
         const CONTAINER_ROLE = Qt.UserRole + 1
         const player = mpris2Model.data(mpris2Model.index(rowIndex, 0), CONTAINER_ROLE)
+        if (!player) return;
 
-        // If this is the configured source, use it
-        if (playerMatches(player, root.sourceName)) {
-            mpris2Model.currentIndex = rowIndex;
+        // When a specific source is configured, lock onto it strictly
+        if (sourceName !== "any") {
+            if (playerMatches(player, sourceName)) {
+                mpris2Model.currentIndex = rowIndex;
+            }
             return;
         }
 
-        // If we're prioritizing playing sources and this one is playing
-        if (prioritizePlayingSource && player.playbackStatus === Mpris.PlaybackStatus.Playing) {
-            // Check if we should override the current selection
-            let shouldOverride = false;
-
-            // If no source is selected yet or "any" is selected
-            if (sourceName === "any") {
-                shouldOverride = true;
-            }
-            // If current player is not playing but this one is
-            else if (mpris2Model.currentPlayer &&
-                    mpris2Model.currentPlayer.playbackStatus !== Mpris.PlaybackStatus.Playing) {
-                shouldOverride = true;
-            }
-
-            if (shouldOverride) {
-                console.log("Selecting active player:", player.desktopEntry);
-                mpris2Model.currentIndex = rowIndex;
-                // Update the source name to the playing source
-                sourceName = player.desktopEntry;
-            }
+        // Automatic mode ("any"): prioritize playing sources
+        if (player.playbackStatus === Mpris.PlaybackStatus.Playing) {
+            mpris2Model.currentIndex = rowIndex;
+            sourceName = player.desktopEntry || "any";
         }
     }
 
-    // Function to scan all sources and find any actively playing source
+    // Function to scan all sources
     function selectActiveSource() {
-        if (!prioritizePlayingSource || mpris2Model.rowCount() === 0) return;
+        if (mpris2Model.rowCount() === 0) return;
 
-        // First pass: look for playing sources
-        for (let i = 0; i < mpris2Model.rowCount(); i++) {
-            const CONTAINER_ROLE = Qt.UserRole + 1
-            const player = mpris2Model.data(mpris2Model.index(i, 0), CONTAINER_ROLE)
-
-            if (player.playbackStatus === Mpris.PlaybackStatus.Playing) {
-                console.log("Found playing source:", player.desktopEntry);
-                mpris2Model.currentIndex = i;
-                // Update the source name to the playing source's desktopEntry (for consistency)
-                sourceName = player.desktopEntry;
-                return;
-            }
-        }
-
-        // Second pass: if no playing source, try to find the configured source
+        // Case 1: Strict target mode (sourceName is specific)
         if (sourceName !== "any") {
             for (let i = 0; i < mpris2Model.rowCount(); i++) {
                 const CONTAINER_ROLE = Qt.UserRole + 1
                 const player = mpris2Model.data(mpris2Model.index(i, 0), CONTAINER_ROLE)
-
-                if (playerMatches(player, sourceName)) {
-                    console.log("Using configured source:", player.desktopEntry);
+                if (player && playerMatches(player, sourceName)) {
                     mpris2Model.currentIndex = i;
                     return;
                 }
             }
+            // Strict target not found: do NOT fallback to other players
+            return;
         }
 
-        // Last resort: if we're using "any" and no playing source was found, use the first source
-        if (sourceName === "any" && mpris2Model.rowCount() > 0) {
-            console.log("Using first available source");
-            mpris2Model.currentIndex = 0;
+        // Case 2: Automatic mode ("any")
+        if (!prioritizePlayingSource) return;
+
+        // First pass: find any actively playing player
+        for (let i = 0; i < mpris2Model.rowCount(); i++) {
+            const CONTAINER_ROLE = Qt.UserRole + 1
+            const player = mpris2Model.data(mpris2Model.index(i, 0), CONTAINER_ROLE)
+            if (player && player.playbackStatus === Mpris.PlaybackStatus.Playing) {
+                mpris2Model.currentIndex = i;
+                return;
+            }
         }
+
+        // Fallback: pick first player
+        mpris2Model.currentIndex = 0;
     }
 
     readonly property string artists: ready ? mpris2Model.currentPlayer.artist : ""

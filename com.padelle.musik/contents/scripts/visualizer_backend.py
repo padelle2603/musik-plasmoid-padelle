@@ -276,7 +276,10 @@ def find_pipewire_node_for_app(app_name):
                 app = (props.get("application.name") or "").lower()
                 node = (props.get("node.name") or "").lower()
 
-                if target in bin_name or target in app or target in node:
+                # Extract basenames if they are paths
+                bin_base = bin_name.rsplit("/", 1)[-1]
+
+                if target in (bin_name, bin_base, app, node):
                     return obj.get("id")
     except Exception:
         pass
@@ -286,27 +289,17 @@ def find_pipewire_node_for_app(app_name):
 def capture_loop(server, spectrum):
     ring = np.zeros(FFT_SIZE, dtype=np.float32)
     hop_bytes = HOP_SIZE * 4
+    zero_bars = json.dumps([0.0] * spectrum.bar_count)
 
     while True:
         if server.idle_for() > IDLE_EXIT_SECS:
             sys.exit(0)
 
-        # Determine capture command
         target_app = server.target_app
-        node_id = find_pipewire_node_for_app(target_app)
+        is_any = not target_app or target_app == "any"
 
-        if node_id is not None:
-            # Capture specific stream via PipeWire pw-record directly
-            cmd = [
-                "pw-record",
-                "--target", str(node_id),
-                "--format=f32",
-                f"--rate={RATE}",
-                "--channels=1",
-                "-",
-            ]
-        else:
-            # Fall back to default monitor via parec
+        if is_any:
+            # Mode "any": capture default monitor
             cmd = [
                 "parec",
                 "-d", "@DEFAULT_MONITOR@",
@@ -314,6 +307,23 @@ def capture_loop(server, spectrum):
                 f"--rate={RATE}",
                 "--channels=1",
                 "--latency-msec=50",
+            ]
+        else:
+            # Strict mode: find stream for target_app
+            node_id = find_pipewire_node_for_app(target_app)
+            if node_id is None:
+                # App stream not active: broadcast zero bars and wait
+                server.broadcast(zero_bars)
+                time.sleep(0.3)
+                continue
+
+            cmd = [
+                "pw-record",
+                "--target", str(node_id),
+                "--format=f32",
+                f"--rate={RATE}",
+                "--channels=1",
+                "-",
             ]
 
         proc = subprocess.Popen(
@@ -323,7 +333,7 @@ def capture_loop(server, spectrum):
         )
         try:
             while True:
-                # If target app changed while running, restart process immediately
+                # If target app changed while running, restart capture immediately
                 if server.target_app != target_app:
                     break
 
@@ -340,7 +350,7 @@ def capture_loop(server, spectrum):
         finally:
             proc.kill()
             proc.wait()
-        time.sleep(0.5)
+        time.sleep(0.3)
 
 
 def main():
