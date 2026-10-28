@@ -1398,6 +1398,7 @@ PlasmoidItem {
                     capHueMode: plasmoid.configuration.vizCapHueMode
                     capSize: plasmoid.configuration.vizCapSize
                     visible: plasmoid.configuration.audioVisualization
+                    sourceProcess: player.sourceName
                 }
 
                 // Move existing player controls here

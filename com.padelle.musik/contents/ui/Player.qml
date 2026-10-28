@@ -25,11 +25,21 @@ QtObject {
     property string sourceName: "any"
     property bool prioritizePlayingSource: true // New property to control priority behavior
 
+    // Match source name against player's desktopEntry, identity, or executable base name
+    function playerMatches(player, name) {
+        if (!name || name === "any") return true
+        const lower = name.toLowerCase()
+        const desktopEntry = player.desktopEntry?.toLowerCase() ?? ""
+        const identity = player.identity?.toLowerCase() ?? ""
+        const processBinary = player.identity?.match(/\/([^\/]+)$/)?.[1]?.toLowerCase() ?? ""
+        return desktopEntry === lower || identity.includes(lower) || processBinary.includes(lower)
+    }
+
     readonly property bool ready: {
         if (!mpris2Model.currentPlayer) {
             return false
         }
-        return mpris2Model.currentPlayer.desktopEntry === sourceName || sourceName === "any";
+        return playerMatches(mpris2Model.currentPlayer, sourceName)
     }
 
     // Initialization timer to select active source after shell restart
@@ -73,7 +83,7 @@ QtObject {
         const player = mpris2Model.data(mpris2Model.index(rowIndex, 0), CONTAINER_ROLE)
 
         // If this is the configured source, use it
-        if (player.desktopEntry === root.sourceName) {
+        if (playerMatches(player, root.sourceName)) {
             mpris2Model.currentIndex = rowIndex;
             return;
         }
@@ -114,7 +124,7 @@ QtObject {
             if (player.playbackStatus === Mpris.PlaybackStatus.Playing) {
                 console.log("Found playing source:", player.desktopEntry);
                 mpris2Model.currentIndex = i;
-                // Update the source name to the playing source
+                // Update the source name to the playing source's desktopEntry (for consistency)
                 sourceName = player.desktopEntry;
                 return;
             }
@@ -126,7 +136,7 @@ QtObject {
                 const CONTAINER_ROLE = Qt.UserRole + 1
                 const player = mpris2Model.data(mpris2Model.index(i, 0), CONTAINER_ROLE)
 
-                if (player.desktopEntry === sourceName) {
+                if (playerMatches(player, sourceName)) {
                     console.log("Using configured source:", player.desktopEntry);
                     mpris2Model.currentIndex = i;
                     return;

@@ -49,6 +49,7 @@ class WSServer:
         self.lock = threading.Lock()
         self.last_client_seen = time.monotonic()
         self.on_message = on_message
+        self.target_app = "any"
         threading.Thread(target=self._accept_loop, daemon=True).start()
 
     def _accept_loop(self):
@@ -249,6 +250,39 @@ class BellSpectrum:
         return np.clip(bars, 0.0, 1.0)
 
 
+def find_pipewire_node_for_app(app_name):
+    """Find the PipeWire node ID for a running audio output stream matching app_name.
+    Matches application.process.binary, application.name, or node.name.
+    Returns integer node ID or None."""
+    if not app_name or app_name == "any":
+        return None
+
+    # Clean app_name: remove .desktop, handle paths, lowercase
+    target = app_name.lower().strip()
+    if target.endswith(".desktop"):
+        target = target[:-8]
+    if "/" in target:
+        target = target.rsplit("/", 1)[-1]
+
+    try:
+        out = subprocess.check_output(["pw-dump"], stderr=subprocess.DEVNULL, universal_newlines=True)
+        data = json.loads(out)
+        for obj in data:
+            if obj.get("type") == "PipeWire:Interface:Node":
+                props = obj.get("info", {}).get("props", {})
+                if props.get("media.class") != "Stream/Output/Audio":
+                    continue
+                bin_name = (props.get("application.process.binary") or "").lower()
+                app = (props.get("application.name") or "").lower()
+                node = (props.get("node.name") or "").lower()
+
+                if target in bin_name or target in app or target in node:
+                    return obj.get("id")
+    except Exception:
+        pass
+    return None
+
+
 def capture_loop(server, spectrum):
     ring = np.zeros(FFT_SIZE, dtype=np.float32)
     hop_bytes = HOP_SIZE * 4
@@ -256,23 +290,46 @@ def capture_loop(server, spectrum):
     while True:
         if server.idle_for() > IDLE_EXIT_SECS:
             sys.exit(0)
-        proc = subprocess.Popen(
-            [
+
+        # Determine capture command
+        target_app = server.target_app
+        node_id = find_pipewire_node_for_app(target_app)
+
+        if node_id is not None:
+            # Capture specific stream via PipeWire pw-record directly
+            cmd = [
+                "pw-record",
+                "--target", str(node_id),
+                "--format=f32",
+                f"--rate={RATE}",
+                "--channels=1",
+                "-",
+            ]
+        else:
+            # Fall back to default monitor via parec
+            cmd = [
                 "parec",
                 "-d", "@DEFAULT_MONITOR@",
                 "--format=float32le",
                 f"--rate={RATE}",
                 "--channels=1",
                 "--latency-msec=50",
-            ],
+            ]
+
+        proc = subprocess.Popen(
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
         )
         try:
             while True:
+                # If target app changed while running, restart process immediately
+                if server.target_app != target_app:
+                    break
+
                 data = proc.stdout.read(hop_bytes)
                 if not data or len(data) < hop_bytes:
-                    break  # parec died (e.g. device change); respawn
+                    break  # process died or finished
                 ring[:-HOP_SIZE] = ring[HOP_SIZE:]
                 ring[-HOP_SIZE:] = np.frombuffer(data, dtype=np.float32)
                 bars = spectrum.process(ring.astype(np.float64))
@@ -283,7 +340,7 @@ def capture_loop(server, spectrum):
         finally:
             proc.kill()
             proc.wait()
-        time.sleep(1)
+        time.sleep(0.5)
 
 
 def main():
@@ -293,9 +350,17 @@ def main():
     args = parser.parse_args()
 
     spectrum = BellSpectrum(args.bars)
+    server = None
 
     def on_message(text):
-        spectrum.set_params(json.loads(text))
+        try:
+            data = json.loads(text)
+            if "sourceProcess" in data and server is not None:
+                server.target_app = str(data["sourceProcess"] or "any")
+            if "bellWidth" in data or "bellFloor" in data or "reactivity" in data or "gamma" in data:
+                spectrum.set_params(data)
+        except Exception:
+            pass
 
     try:
         server = WSServer("127.0.0.1", args.port, on_message=on_message)

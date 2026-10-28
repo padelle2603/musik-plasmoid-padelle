@@ -29,10 +29,14 @@ Item {
     property real reactivity: 0.65   // 0 floaty .. 1 snappy
     property real punch: 0.8         // gamma; <1 boosts quiet detail
 
+    // Audio source process name (empty or "any" = default mix, otherwise try to isolate)
+    property string sourceProcess: ""
+
     onBellWidthChanged: pushConfig()
     onBellFloorChanged: pushConfig()
     onReactivityChanged: pushConfig()
     onPunchChanged: pushConfig()
+    onSourceProcessChanged: pushConfig()
 
     function pushConfig() {
         if (socket.status === WebSocket.Open) {
@@ -40,7 +44,8 @@ Item {
                 bellWidth: bellWidth,
                 bellFloor: bellFloor,
                 reactivity: reactivity,
-                gamma: punch
+                gamma: punch,
+                sourceProcess: sourceProcess
             }))
         }
     }

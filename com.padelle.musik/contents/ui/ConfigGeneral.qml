@@ -212,7 +212,7 @@ KCM.SimpleKCM {
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: "Sources"
+            Kirigami.FormData.label: i18n("Audio Source")
         }
 
         ComboBox {
@@ -220,11 +220,30 @@ KCM.SimpleKCM {
             editable: true
 
             onAccepted: () => {
-                if (find(editText) === -1)
-                    model = [...model, editText]
+                let clean = editText.trim();
+                if (clean.endsWith(".desktop")) {
+                    clean = clean.substring(0, clean.length - 8);
+                }
+                const slashIdx = clean.lastIndexOf("/");
+                if (slashIdx !== -1) {
+                    clean = clean.substring(slashIdx + 1);
+                }
+                if (clean.length > 0 && find(clean) === -1) {
+                    model = [...model, clean];
+                    currentIndex = model.length - 1;
+                }
             }
 
-            Kirigami.FormData.label: i18n("Preferred MPRIS2 source:")
+            Kirigami.FormData.label: i18n("Target app (.desktop or binary):")
+        }
+
+        Label {
+            text: i18n("Select 'any' to automatically detect playing music and mix system audio. Enter a binary name or .desktop ID (e.g. spotify, vlc, discord) to strictly track that app's metadata and isolate its audio stream.")
+            font.pointSize: Kirigami.Theme.smallFont.pointSize
+            opacity: 0.6
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 25
         }
 
         Kirigami.Separator {
