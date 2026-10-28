@@ -52,6 +52,19 @@ KCM.SimpleKCM {
         }
     }
 
+    function removeSelectedSource() {
+        let list = [...sourceComboBox.model];
+        const idx = sourceComboBox.currentIndex;
+        if (idx < 0 || idx >= list.length) return;
+        list.splice(idx, 1);
+        sourceComboBox.model = list;
+        if (list.length > 0) {
+            sourceComboBox.currentIndex = Math.min(idx, list.length - 1);
+        } else {
+            sourceComboBox.currentIndex = -1;
+        }
+    }
+
     // property alias cfg_useCustomFont: customFontCheckbox.checked
     // property alias cfg_customFont: fontDialog.fontChosen
 
@@ -261,6 +274,13 @@ KCM.SimpleKCM {
                 icon.name: "document-open"
                 onClicked: appFileDialog.open()
             }
+
+            Button {
+                text: i18n("Remove")
+                icon.name: "edit-delete"
+                enabled: sourceComboBox.currentIndex >= 0 && sourceComboBox.count > 0
+                onClicked: removeSelectedSource()
+            }
         }
 
         QtDialogs.FileDialog {
@@ -310,7 +330,7 @@ KCM.SimpleKCM {
         }
 
         Label {
-            text: i18n("Select 'any' to automatically detect playing music and mix system audio. Enter or import an executable / .desktop file (e.g. spotify, vlc, discord) to strictly track only that app's metadata and isolate its audio waveform.")
+            text: i18n("Enter or import an executable name or .desktop file (e.g. spotify, vlc, discord) to strictly track that app's metadata and isolate its audio waveform.")
             font.pointSize: Kirigami.Theme.smallFont.pointSize
             opacity: 0.6
             wrapMode: Text.WordWrap

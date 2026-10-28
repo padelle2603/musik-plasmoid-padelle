@@ -22,12 +22,11 @@ QtObject {
         }
     }
 
-    property string sourceName: "any"
-    property bool prioritizePlayingSource: true
+    property string sourceName: ""
 
     // Match source name against player's desktopEntry or executable base name
     function playerMatches(player, name) {
-        if (!name || name === "any") return true
+        if (!player || !name) return false
         let clean = name.toLowerCase().trim()
         if (clean.endsWith(".desktop")) {
             clean = clean.substring(0, clean.length - 8)
@@ -45,7 +44,7 @@ QtObject {
     }
 
     readonly property bool ready: {
-        if (!mpris2Model.currentPlayer) {
+        if (!mpris2Model.currentPlayer || !sourceName) {
             return false
         }
         return playerMatches(mpris2Model.currentPlayer, sourceName)
@@ -62,91 +61,44 @@ QtObject {
         }
     }
 
-    // Timer to periodically check for playing sources (can be adjusted or disabled)
+    // Timer to periodically seek target player if not yet available
     property var checkTimer: Timer {
-        interval: 5000
-        running: prioritizePlayingSource
+        interval: 3000
+        running: !ready && sourceName.length > 0
         repeat: true
         onTriggered: {
-            checkPlayingPlayers();
+            selectActiveSource();
         }
     }
 
-    // Check if any players have started playing
     function checkPlayingPlayers() {
-        if (sourceName !== "any") {
-            // When targeting a specific app, only seek that app if not already selected
-            if (!ready || !playerMatches(mpris2Model.currentPlayer, sourceName)) {
-                selectActiveSource();
-            }
-            return;
+        if (!ready && sourceName.length > 0) {
+            selectActiveSource();
         }
-
-        if (!prioritizePlayingSource) return;
-
-        // Only look for playing sources if we don't already have one playing
-        if (ready && mpris2Model.currentPlayer &&
-            mpris2Model.currentPlayer.playbackStatus === Mpris.PlaybackStatus.Playing) {
-            return;
-        }
-
-        selectActiveSource();
     }
 
     // Function to select a player when a new source is added
     function selectPlayerSource(rowIndex) {
+        if (!sourceName) return;
         const CONTAINER_ROLE = Qt.UserRole + 1
         const player = mpris2Model.data(mpris2Model.index(rowIndex, 0), CONTAINER_ROLE)
-        if (!player) return;
-
-        // When a specific source is configured, lock onto it strictly
-        if (sourceName !== "any") {
-            if (playerMatches(player, sourceName)) {
-                mpris2Model.currentIndex = rowIndex;
-            }
-            return;
-        }
-
-        // Automatic mode ("any"): prioritize playing sources
-        if (player.playbackStatus === Mpris.PlaybackStatus.Playing) {
+        if (player && playerMatches(player, sourceName)) {
             mpris2Model.currentIndex = rowIndex;
-            sourceName = player.desktopEntry || "any";
         }
     }
 
-    // Function to scan all sources
+    // Function to scan all sources for the target app
     function selectActiveSource() {
-        if (mpris2Model.rowCount() === 0) return;
+        if (!sourceName || mpris2Model.rowCount() === 0) return;
 
-        // Case 1: Strict target mode (sourceName is specific)
-        if (sourceName !== "any") {
-            for (let i = 0; i < mpris2Model.rowCount(); i++) {
-                const CONTAINER_ROLE = Qt.UserRole + 1
-                const player = mpris2Model.data(mpris2Model.index(i, 0), CONTAINER_ROLE)
-                if (player && playerMatches(player, sourceName)) {
-                    mpris2Model.currentIndex = i;
-                    return;
-                }
-            }
-            // Strict target not found: do NOT fallback to other players
-            return;
-        }
-
-        // Case 2: Automatic mode ("any")
-        if (!prioritizePlayingSource) return;
-
-        // First pass: find any actively playing player
         for (let i = 0; i < mpris2Model.rowCount(); i++) {
             const CONTAINER_ROLE = Qt.UserRole + 1
             const player = mpris2Model.data(mpris2Model.index(i, 0), CONTAINER_ROLE)
-            if (player && player.playbackStatus === Mpris.PlaybackStatus.Playing) {
+            if (player && playerMatches(player, sourceName)) {
                 mpris2Model.currentIndex = i;
                 return;
             }
         }
-
-        // Fallback: pick first player
-        mpris2Model.currentIndex = 0;
     }
 
     readonly property string artists: ready ? mpris2Model.currentPlayer.artist : ""

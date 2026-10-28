@@ -51,63 +51,42 @@ PlasmoidItem {
     }
     readonly property font boldTextFont: Qt.font(Object.assign({}, textFont, {weight: Font.Bold}))
 
+    function getEffectiveSource() {
+        const sources = plasmoid.configuration.sources;
+        const idx = plasmoid.configuration.sourceIndex;
+        if (sources && idx >= 0 && idx < sources.length) {
+            return sources[idx];
+        }
+        return "";
+    }
+
     Player {
         id: player
-        sourceName: plasmoid.configuration.sources[plasmoid.configuration.sourceIndex]
+        sourceName: getEffectiveSource()
         onReadyChanged: {
             Plasmoid.status = player.ready ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.HiddenStatus
             console.debug(`Player ready changed: ${player.ready} -> plasmoid status changed: ${Plasmoid.status}`)
         }
-
-        // Add this property to track when configuration changes
-        property bool updatingFromPlayer: false
-
-        // Update your component to listen to source changes
-        onSourceNameChanged: {
-            if (!updatingFromPlayer) return;
-
-            // Find the index of the new source in the configuration
-            const sourceIndex = plasmoid.configuration.sources.indexOf(sourceName);
-            if (sourceIndex >= 0) {
-                console.log(`Updating configuration to source: ${sourceName} (index: ${sourceIndex})`);
-                plasmoid.configuration.sourceIndex = sourceIndex;
-            } else if (sourceName !== "any") {
-                // If the source isn't in our configuration yet, add it
-                console.log(`Adding new source to configuration: ${sourceName}`);
-                let newSources = [...plasmoid.configuration.sources];
-                newSources.push(sourceName);
-                plasmoid.configuration.sources = newSources;
-                plasmoid.configuration.sourceIndex = newSources.length - 1;
-            }
-
-            updatingFromPlayer = false;
-        }
     }
 
-    // To handle resuming from suspend, add this:
+    // To handle resuming from suspend:
     Connections {
         target: QtQuick.Window.window
         function onVisibleChanged() {
             if (QtQuick.Window.window.visible) {
-                console.log("Window became visible, checking for active sources");
-                const currentCfg = plasmoid.configuration.sources[plasmoid.configuration.sourceIndex];
-                if (currentCfg === "any") {
-                    player.updatingFromPlayer = true;
-                }
                 player.selectActiveSource();
             }
         }
     }
 
-    // Add this to handle manual source selection from the configuration
+    // Handle source selection or list changes from configuration
     Connections {
         target: plasmoid.configuration
         function onSourceIndexChanged() {
-            if (player.updatingFromPlayer) return;
-
-            const newSource = plasmoid.configuration.sources[plasmoid.configuration.sourceIndex];
-            console.log(`Configuration source changed to: ${newSource}`);
-            player.sourceName = newSource;
+            player.sourceName = getEffectiveSource();
+        }
+        function onSourcesChanged() {
+            player.sourceName = getEffectiveSource();
         }
     }
 
@@ -391,7 +370,7 @@ PlasmoidItem {
                 transform: Translate { y: compact.textVerticalOffset }
 
                 ColumnLayout {
-                    id: column
+                    id: compactColumn
                     spacing: 0
                     // Size to content (not anchors.fill) so the SongSwapText
                     // wrapper can measure us without a binding loop.

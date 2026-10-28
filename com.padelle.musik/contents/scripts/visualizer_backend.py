@@ -49,7 +49,7 @@ class WSServer:
         self.lock = threading.Lock()
         self.last_client_seen = time.monotonic()
         self.on_message = on_message
-        self.target_app = "any"
+        self.target_app = ""
         threading.Thread(target=self._accept_loop, daemon=True).start()
 
     def _accept_loop(self):
@@ -254,7 +254,7 @@ def find_pipewire_node_for_app(app_name):
     """Find the PipeWire node ID for a running audio output stream matching app_name.
     Matches application.process.binary, application.name, or node.name.
     Returns integer node ID or None."""
-    if not app_name or app_name == "any":
+    if not app_name:
         return None
 
     # Clean app_name: remove .desktop, handle paths, lowercase
@@ -295,36 +295,29 @@ def capture_loop(server, spectrum):
         if server.idle_for() > IDLE_EXIT_SECS:
             sys.exit(0)
 
-        target_app = server.target_app
-        is_any = not target_app or target_app == "any"
+        target_app = (server.target_app or "").strip()
 
-        if is_any:
-            # Mode "any": capture default monitor
-            cmd = [
-                "parec",
-                "-d", "@DEFAULT_MONITOR@",
-                "--format=float32le",
-                f"--rate={RATE}",
-                "--channels=1",
-                "--latency-msec=50",
-            ]
-        else:
-            # Strict mode: find stream for target_app
-            node_id = find_pipewire_node_for_app(target_app)
-            if node_id is None:
-                # App stream not active: broadcast zero bars and wait
-                server.broadcast(zero_bars)
-                time.sleep(0.3)
-                continue
+        # If no target application is configured, output silence
+        if not target_app:
+            server.broadcast(zero_bars)
+            time.sleep(0.3)
+            continue
 
-            cmd = [
-                "pw-record",
-                "--target", str(node_id),
-                "--format=f32",
-                f"--rate={RATE}",
-                "--channels=1",
-                "-",
-            ]
+        # Look for the active PipeWire audio stream of target_app
+        node_id = find_pipewire_node_for_app(target_app)
+        if node_id is None:
+            server.broadcast(zero_bars)
+            time.sleep(0.3)
+            continue
+
+        cmd = [
+            "pw-record",
+            "--target", str(node_id),
+            "--format=f32",
+            f"--rate={RATE}",
+            "--channels=1",
+            "-",
+        ]
 
         proc = subprocess.Popen(
             cmd,
@@ -366,7 +359,7 @@ def main():
         try:
             data = json.loads(text)
             if "sourceProcess" in data and server is not None:
-                server.target_app = str(data["sourceProcess"] or "any")
+                server.target_app = str(data["sourceProcess"] or "")
             if "bellWidth" in data or "bellFloor" in data or "reactivity" in data or "gamma" in data:
                 spectrum.set_params(data)
         except Exception:

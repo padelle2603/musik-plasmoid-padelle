@@ -29,7 +29,7 @@ Item {
     property real reactivity: 0.65   // 0 floaty .. 1 snappy
     property real punch: 0.8         // gamma; <1 boosts quiet detail
 
-    // Audio source process name (empty or "any" = default mix, otherwise try to isolate)
+    // Audio source process name (empty = silence, otherwise isolates the process audio stream)
     property string sourceProcess: ""
 
     onBellWidthChanged: pushConfig()
