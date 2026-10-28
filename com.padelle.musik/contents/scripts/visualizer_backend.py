@@ -17,6 +17,7 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 import socket
 import struct
 import subprocess
@@ -252,35 +253,97 @@ class BellSpectrum:
 
 def find_pipewire_node_for_app(app_name):
     """Find the PipeWire node ID for a running audio output stream matching app_name.
-    Matches application.process.binary, application.name, or node.name.
+    Matches PipeWire properties and process inspection (/proc/<pid>/exe, cmdline, comm).
     Returns integer node ID or None."""
     if not app_name:
         return None
 
-    # Clean app_name: remove .desktop, handle paths, lowercase
+    # Clean app_name: remove .desktop / .appimage, handle paths, lowercase
     target = app_name.lower().strip()
     if target.endswith(".desktop"):
         target = target[:-8]
     if "/" in target:
         target = target.rsplit("/", 1)[-1]
+    if target.endswith(".appimage"):
+        target = target[:-9]
 
     try:
         out = subprocess.check_output(["pw-dump"], stderr=subprocess.DEVNULL, universal_newlines=True)
         data = json.loads(out)
         for obj in data:
-            if obj.get("type") == "PipeWire:Interface:Node":
-                props = obj.get("info", {}).get("props", {})
-                if props.get("media.class") != "Stream/Output/Audio":
+            if obj.get("type") != "PipeWire:Interface:Node":
+                continue
+            props = obj.get("info", {}).get("props", {})
+            if props.get("media.class") != "Stream/Output/Audio":
+                continue
+
+            # 1. Check direct PipeWire properties
+            fields_to_check = [
+                props.get("application.process.binary"),
+                props.get("application.name"),
+                props.get("node.name"),
+                props.get("application.process.name"),
+                props.get("media.name"),
+                props.get("node.description"),
+                props.get("application.icon-name"),
+            ]
+
+            for val in fields_to_check:
+                if not val:
                     continue
-                bin_name = (props.get("application.process.binary") or "").lower()
-                app = (props.get("application.name") or "").lower()
-                node = (props.get("node.name") or "").lower()
-
-                # Extract basenames if they are paths
-                bin_base = bin_name.rsplit("/", 1)[-1]
-
-                if target in (bin_name, bin_base, app, node):
+                v_lower = str(val).lower()
+                v_base = v_lower.rsplit("/", 1)[-1]
+                if target == v_lower or target == v_base or target in v_base:
                     return obj.get("id")
+
+            # 2. Process inspection via application.process.id (handles AppImages, wrappers, cpal)
+            pid = props.get("application.process.id")
+            if pid and isinstance(pid, int):
+                curr_pid = pid
+                for _ in range(3):
+                    if not curr_pid or curr_pid <= 1:
+                        break
+                    try:
+                        # Check binary link /proc/<pid>/exe
+                        try:
+                            exe = os.readlink(f"/proc/{curr_pid}/exe").lower()
+                            exe_base = exe.rsplit("/", 1)[-1]
+                            if target == exe_base or target in exe:
+                                return obj.get("id")
+                        except Exception:
+                            pass
+
+                        # Check comm
+                        try:
+                            with open(f"/proc/{curr_pid}/comm", "r") as f:
+                                comm = f.read().strip().lower()
+                            if target == comm or target in comm:
+                                return obj.get("id")
+                        except Exception:
+                            pass
+
+                        # Check cmdline (especially AppImage path or python script arguments)
+                        try:
+                            with open(f"/proc/{curr_pid}/cmdline", "rb") as f:
+                                cmdline = f.read().decode("utf-8", errors="ignore").lower()
+                            if target in cmdline:
+                                return obj.get("id")
+                        except Exception:
+                            pass
+
+                        # Traverse to parent process if needed
+                        ppid = None
+                        try:
+                            with open(f"/proc/{curr_pid}/status", "r") as f:
+                                for line in f:
+                                    if line.startswith("PPid:"):
+                                        ppid = int(line.split()[1])
+                                        break
+                        except Exception:
+                            pass
+                        curr_pid = ppid
+                    except Exception:
+                        break
     except Exception:
         pass
     return None
