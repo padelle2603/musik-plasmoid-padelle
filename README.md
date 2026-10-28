@@ -1,8 +1,9 @@
-![banner-image](images/Header.png)
 # MusiK Plasmoid
 Engineered with a love for music, skinned in Zune nostalgia, and refined down to the last pixel, MusiK is a slick music player plasmoid, based on MPRIS2, Crafted for the detail-obsessed. Built for Plasma.
 
 ![Demo](images/Demo.gif)
+
+This is a personal fork maintained by Padelle, based on [Rudraksh88/musik-plasmoid](https://github.com/Rudraksh88/musik-plasmoid).
 
 ## Features
 - **Fully Customizable Typography**
@@ -32,9 +33,6 @@ MusiK is built on the MPRIS2 protocol, ensuring compatibility with a wide range 
 ![Preview 3](images/Preview3.png)
 ![Preview 4](images/Preview4.png)
 
-- A longer demo
-![Demo Long](images/DemoFull.gif)
-
 ## Installation
 ### Requirements
 The widget itself needs nothing beyond Plasma 6. The live audio visualizer is powered by a tiny Python backend that **ships inside the widget and starts automatically** — there is nothing to install or configure separately. It only relies on:
@@ -55,17 +53,17 @@ git clone https://github.com/Rudraksh88/musik-plasmoid /tmp/musik-plasmoid
 
 2. Install the widget:
 ```
-kpackagetool6 -i /tmp/musik-plasmoid/com.rudraksh.musik/ --type Plasma/Applet
+kpackagetool6 -i /tmp/musik-plasmoid/com.padelle.musik/ --type Plasma/Applet
 ```
 
 3. Upgrading the widget:
 ```bash
-kpackagetool6 -u /tmp/musik-plasmoid/com.rudraksh.musik/ --type Plasma/Applet
+kpackagetool6 -u /tmp/musik-plasmoid/com.padelle.musik/ --type Plasma/Applet
 ```
 
 4. Removing the widget:
 ```bash
-kpackagetool6 -r com.rudraksh.musik --type Plasma/Applet
+kpackagetool6 -r com.padelle.musik --type Plasma/Applet
 ```
 
 ## Roadmap
@@ -91,7 +89,7 @@ This plasmoid was powered up using 100% organically-sourced, sustainably-grown c
 **Only for India** UPI: `rudraksh-tripathi@ibl`
 
 ## Credits and Acknowledgements
-This project began as a fork of [plasmusic-toolbar by ccatterina](https://github.com/ccatterina/plasmusic-toolbar). Since then, it has evolved substantially, and I would like to acknowledge the original author for their work which served as the foundation for this project.
+This project is a fork of [Rudraksh88/musik-plasmoid](https://github.com/Rudraksh88/musik-plasmoid) by Rudraksh Tripathi, which itself began as a fork of [plasmusic-toolbar by ccatterina](https://github.com/ccatterina/plasmusic-toolbar). Grateful to both authors for their foundational work.
 
 ## License
 **MusiK Plasmoid**

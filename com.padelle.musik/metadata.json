@@ -3,12 +3,16 @@
     "KPlugin": {
         "Authors": [
             {
+                "Email": "padelle2@protonmail.com",
+                "Name": "Padelle"
+            },
+            {
                 "Email": "rudraksh.tripathi8@gmail.com",
                 "Name": "Rudraksh Tripathi"
             }
         ],
         "Icon": "music-player",
-        "Id": "com.rudraksh.musik",
+        "Id": "com.padelle.musik",
         "License": "GPL3",
         "Name": "MusiK",
         "Version": "1.0.0",
