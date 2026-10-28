@@ -1,100 +1,67 @@
-# MusiK Plasmoid
-Engineered with a love for music, skinned in Zune nostalgia, and refined down to the last pixel, MusiK is a slick music player plasmoid, based on MPRIS2, Crafted for the detail-obsessed. Built for Plasma.
+# MusiK Plasmoid (Fork)
 
-![Demo](images/Demo.gif)
+This repository is a personal fork of [Rudraksh88/musik-plasmoid](https://github.com/Rudraksh88/musik-plasmoid) maintained by Padelle for KDE Plasma 6, packaged under the identifier `com.padelle.musik`.
 
-This is a personal fork maintained by Padelle, based on [Rudraksh88/musik-plasmoid](https://github.com/Rudraksh88/musik-plasmoid).
+For comprehensive upstream documentation, original features, screenshots, and visualizer customization details, please refer directly to the **[Upstream README](https://github.com/Rudraksh88/musik-plasmoid#readme)**.
 
-## Features
-- **Fully Customizable Typography**
-MusiK lets you fine-tune the font settings for both the mini and full player views. Choose your preferred font family, size, adjust letter spacing, and toggle capitalization to match your desktop’s personality — or your mood.
+---
 
-- **Zune-Inspired Waveform Visualizer**
-A sleek waveform inspired by the iconic Zune interface that reacts to your *actual system audio* in real time — bass peaks bloom in the center and fan out toward the highs at the edges. Fully tunable from the settings: bell shape, reactivity, punch, glow, motion blur, peak cap tint and more.
+## Modifications in this Fork
 
-- **Adaptive Accents from Album Art**
-MusiK samples the dominant color from your album art and uses it to accent key UI elements — like the audio visualizer, seek bar, text, and buttons — creating a player that visually matches every track.
+This fork adapts MusiK to strictly track a single chosen application and isolate its audio output:
 
-- **Customizable spacing**
-Adjust the spacing between the UI elements to suit your aesthetic preferences. Whether you prefer a compact look or a more spacious layout, MusiK has you covered.
+- **PipeWire Audio Stream Isolation:** The visualizer backend queries `pw-dump` for active audio streams belonging to the target application and records exclusively from that node using `pw-record --target <node_id>`. It no longer captures or mixes the global system monitor.
+- **Strict Player Exclusivity:** The widget locks onto the selected MPRIS target. It will not automatically jump to other applications when they begin playing, nor fallback to an arbitrary player when idle.
+- **Removal of "any" Fallback:** Removed the hardcoded `"any"` fallback and preloaded sources. When no target is configured or when the configured app is closed, the widget and visualizer remain silent and idle.
+- **Application Import:** Added an **"Import..."** button in the settings dialog allowing users to pick an executable or `.desktop` file (automatically extracting the binary from the `Exec=` line).
+- **Source Entry Removal:** Added a **"Remove"** button in settings to delete unwanted or obsolete entries from the saved sources list.
+- **Package ID Rebranding:** Rebranded the package identifier to `com.padelle.musik` to avoid collision with upstream installations.
 
-- **Smooth Animations & Scroll Behavior**
-The subtle animations and scroll behavior ensure a fluid and responsive experience.
-
-- **Built for Plasma**
-Designed to blend effortlessly with your Plasma theme, it feels right at home on your desktop. Specifically tailored for translucent themes and panels.
-
-- **MPRIS2 based**
-MusiK is built on the MPRIS2 protocol, ensuring compatibility with a wide range of media players. It works seamlessly with popular players like Spotify, VLC, and more.
-
-## Screenshots
-![Preview 1](images/Preview1.png)
-![Preview 2](images/Preview2.png)
-![Preview 3](images/Preview3.png)
-![Preview 4](images/Preview4.png)
+---
 
 ## Installation
+
 ### Requirements
-The widget itself needs nothing beyond Plasma 6. The live audio visualizer is powered by a tiny Python backend that **ships inside the widget and starts automatically** — there is nothing to install or configure separately. It only relies on:
 
-| Dependency | Install | Notes |
-|---|---|---|
-| `python3` | — | Preinstalled on virtually every distro |
-| `numpy` | `pacman -S python-numpy` · `apt install python3-numpy` · `dnf install python3-numpy` | Used for the FFT |
-| `parec` | — | Ships with `libpulse` / `pulseaudio-utils`, already present on any PipeWire or PulseAudio desktop (any Plasma system) |
+- **KDE Plasma 6**
+- **Python 3** with `numpy` (`python3-numpy` / `python-numpy`)
+- **PipeWire** (`pw-dump`, `pw-record`)
 
-If anything is missing, the widget still works fine — the visualizer just falls back to a gentle non-reactive animation instead of live audio.
+### Commands
 
-### Install
-1. Clone the repository:
-```bash
-git clone https://github.com/Rudraksh88/musik-plasmoid /tmp/musik-plasmoid
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/padelle2603/musik-plasmoid-padelle.git
+   cd musik-plasmoid-padelle
+   ```
 
-2. Install the widget:
-```
-kpackagetool6 -i /tmp/musik-plasmoid/com.padelle.musik/ --type Plasma/Applet
-```
+2. **Install the plasmoid:**
+   ```bash
+   kpackagetool6 -i com.padelle.musik/ --type Plasma/Applet
+   ```
 
-3. Upgrading the widget:
-```bash
-kpackagetool6 -u /tmp/musik-plasmoid/com.padelle.musik/ --type Plasma/Applet
-```
+3. **Update an existing installation:**
+   ```bash
+   kpackagetool6 -u com.padelle.musik/ --type Plasma/Applet
+   ```
 
-4. Removing the widget:
-```bash
-kpackagetool6 -r com.padelle.musik --type Plasma/Applet
-```
+4. **Uninstall:**
+   ```bash
+   kpackagetool6 -r com.padelle.musik --type Plasma/Applet
+   ```
 
-## Roadmap
-- [x] Add dynamic waveform visualizer that reacts to the music.
-- [ ] Add settings for changing sizes of icons and other UI elements.
-- [ ] Text Animations on song change.
-- [ ] Opaque backgrounds (irrespective of the Plasma theme)
-- [ ] Clean up the settings UI.
+---
 
-## Contributing
-Contributions are welcome! If you have suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
+## Acknowledgments & Credits
 
-## Support
-This plasmoid was powered up using 100% organically-sourced, sustainably-grown coffee and a lot of late nights. If it brought you joy, consider providing a treat — coffee, snacks  and beer accepted. Donations may unlock bonus content (or at least a grin).
+- Upstream project: [Rudraksh88/musik-plasmoid](https://github.com/Rudraksh88/musik-plasmoid) by **Rudraksh Tripathi**.
+- Original base work: [plasmusic-toolbar](https://github.com/ccatterina/plasmusic-toolbar) by **ccatterina**.
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Donate-orange.svg?style=flat&logo=buy-me-a-coffee)](https://www.buymeacoffee.com/rudraksh.tripathi)
+Grateful to both authors for their foundational work. For upstream support, donations, or original assets, please visit [Rudraksh88/musik-plasmoid](https://github.com/Rudraksh88/musik-plasmoid).
 
-<!-- Patreon: [Rudraksh Tripathi](https://patreon.com/RudrakshTripathi?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink) -->
-
-<!-- PayPal -->
-[![PayPal](https://img.shields.io/badge/PayPal-Donate-blue.svg?style=flat&logo=paypal)](https://www.paypal.me/rudrakshtripathi)
-
-**Only for India** UPI: `rudraksh-tripathi@ibl`
-
-## Credits and Acknowledgements
-This project is a fork of [Rudraksh88/musik-plasmoid](https://github.com/Rudraksh88/musik-plasmoid) by Rudraksh Tripathi, which itself began as a fork of [plasmusic-toolbar by ccatterina](https://github.com/ccatterina/plasmusic-toolbar). Grateful to both authors for their foundational work.
+---
 
 ## License
-**MusiK Plasmoid**
-**Copyright (C) 2025 Rudraksh Tripathi**
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3.
-
-See the [**LICENSE**](LICENSE) file for the complete license text.
+This project is licensed under the **GNU General Public License v3.0**.  
+See the [**LICENSE**](LICENSE) file for the full license text.
